@@ -79,7 +79,7 @@ $grep 'PLA2' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BE
 
 #### Reference genome
 
-We'll use the [Prairie Rattlesnake (_Crotalus viridis_) genome assembly](https://figshare.com/articles/dataset/Prairie_rattlesnake_Crotalus_viridis_genome_assembly/9030782) as the reference in this workflow.
+Use the [Prairie Rattlesnake (_Crotalus viridis_) genome assembly](https://figshare.com/articles/dataset/Prairie_rattlesnake_Crotalus_viridis_genome_assembly/9030782) as the reference in this workflow.
 
 Prepare necessary indexes for downstream analysis.
 
@@ -89,10 +89,9 @@ samtools faidx CroVir_genome_L77pg_16Aug2017.final_rename.fasta
 ./gatk-4.0.8.1/gatk CreateSequenceDictionary -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta
 ```
 
-
 ### Read filtering
 
-We'll quality trim and filter raw whole genome resequencing reads using trimmomatic using these settings:
+Quality trim and filter raw whole genome resequencing reads using trimmomatic using these settings:
 
 * Remove 5' end bases if quality is below 20
 * Remove 3' end bases if quality is below 20
@@ -129,7 +128,7 @@ Run the script.
 
 ### Read mapping
 
-We'll use bwa 'mem' to map our filtered reads to the reference genome.
+Use bwa 'mem' to map our filtered reads to the reference genome.
 
 #### Set up environment
 
@@ -155,3 +154,38 @@ Run the script.
 `sh bwa_mem.sh sample.list`
 
 ### Variant calling
+
+Use GATK for individual variant discovery and variant calling among the cohort of samples. This is a two-step process, first using HaplotypeCaller to generate individual genomic VCFs (gVCFs), then using GenotypeGVCFs to call variants among samples and generate an all-sites VCF.
+
+#### Set up environment
+
+```
+mkdir gvcf
+mkdir vcf
+```
+
+#### Call individual variable sites using HaplotypeCaller
+
+The script below will run GATK HaplotypeCaller on each sample in the `sample.list`. It will also zip and index the gVCF output.
+
+*Note: GATK HaplotypeCaller will take a small eternity to run on all of these samples one-by-one. Consider breaking up the job into smaller lists of samples and running jobs in parallel.*
+
+GATK_HaplotypeCaller.sh
+
+```
+list=$1
+for i in `cat $list`; do
+	./gatk-4.0.8.1/gatk HaplotypeCaller -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta --ERC GVCF -I ./bam/$i.bam -O ./gvcf/$i.raw.snps.indels.g.vcf
+	bgzip ./gvcf/$i.raw.snps.indels.g.vcf
+	tabix -p vcf ./gvcf/$i.raw.snps.indels.g.vcf.gz
+done
+```
+
+Run the script.
+
+`sh GATK_HaplotypeCaller.sh sample.list`
+
+#### Call cohort variant sites and generate an 'all-sites' VCF using GenotypeGVCFs
+
+
+
