@@ -130,7 +130,7 @@ Run the script.
 
 ### Read mapping
 
-We'll use `bwa` 'mem' to map our filtered reads to the reference genome.
+We'll use bwa 'mem' to map our filtered reads to the reference genome.
 
 #### Set up environment
 
