@@ -23,8 +23,6 @@ The steps described below use on the following software, and assume that depende
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
 
-Lists and miscellaneous files are in the `processing_files` directory.
-Shell and Python scripts are in respective `shell` and `python` directories.
-R scripts are in the `R` directory.
+Lists and miscellaneous files are in the `processing_files` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
 
 
