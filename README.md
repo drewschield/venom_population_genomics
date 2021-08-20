@@ -4,6 +4,27 @@
 
 This repository contains details on the data processing and analysis steps taken in analyses of population genomic variation and signatures of selection in major rattlesnake venom gene regions. This workflow is a companion to the methods description in Schield et al. (in review). Analysis of recombination rates and statistics requiring phased variants are based on [recombination maps](https://figshare.com/articles/dataset/Rattlesnake_Recombination_Maps/11283224) and phased data from [Schield et al. _MBE_ 37: 1272-1294](https://academic.oup.com/mbe/advance-article-abstract/doi/10.1093/molbev/msaa003/5700722).
 
+Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
+
+## Contents
+
+* [Software & dependencies](#software-&-dependencies)
+* [General resources](#general-resources)
+* [Read filtering](#read-filtering)
+* Read mapping
+* Quantifying mapping results
+* Variant calling
+* Variant filtering
+* Analysis of copy-number variation
+* Population structure analysis
+* Demographic analysis
+* Population genetic diversity & differentiation
+* Signatures of selection
+* Recombination rate variation & linkage disequilibrium
+* Analysis in R
+
+### Software & dependencies
+
 The steps described below use on the following software, and assume that dependencies are on the user path:
 
 * trimmomatic
@@ -24,24 +45,6 @@ The steps described below use on the following software, and assume that depende
 * R
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
-
-Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
-
-## Contents
-
-* [General resources](#general-resources)
-* [Read filtering](#read-filtering)
-* Read mapping
-* Quantifying mapping results
-* Variant calling
-* Variant filtering
-* Analysis of copy-number variation
-* Population structure analysis
-* Demographic analysis
-* Population genetic diversity & differentiation
-* Signatures of selection
-* Recombination rate variation & linkage disequilibrium
-* Analysis in R
 
 ### General resources
 
