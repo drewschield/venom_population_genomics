@@ -353,9 +353,9 @@ mv *.count ../cnv-seq_output/
 #### Extract chromosome-specific hits for venom-linked microchromosomes
 
 ```
-$for i in *.chrom; do grep -w 'scaffold-mi1' $i > $i.mi1; done
-$for i in *.chrom; do grep 'scaffold-mi2' $i > $i.mi2; done
-$for i in *.chrom; do grep 'scaffold-mi7' $i > $i.mi7; done
+for i in *.chrom; do grep -w 'scaffold-mi1' $i > $i.mi1; done
+for i in *.chrom; do grep 'scaffold-mi2' $i > $i.mi2; done
+for i in *.chrom; do grep 'scaffold-mi7' $i > $i.mi7; done
 ```
 
 #### Perform chromosome-specific analyses
