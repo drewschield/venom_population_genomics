@@ -21,5 +21,10 @@ The steps described below use on the following software, and assume that depende
 * betascan
 * R
 
-Note: I installed and maintain a number of these dependencies within a [conda](https://docs.conda.io/en/latest/) environment.
+Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
+
+Lists and miscellaneous files are in the `processing_files` directory.
+Shell and Python scripts are in respective `shell` and `python` directories.
+R scripts are in the `R` directory.
+
 
