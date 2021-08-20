@@ -50,6 +50,8 @@ Note: I installed a number of these dependencies using [conda](https://docs.cond
 
 ### General resources
 
+#### Processing files
+
 Several files will come up repeatedly throughout this workflow, namely annotation files with coordinates for venom genes and non-venom paralogs across the genome. These files are each located in the `resources` directory.
 
 * `VenomGene_regions_full_updated.gff` - contains venom gene start/stop coordinates.
@@ -75,6 +77,19 @@ $grep 'SVMP' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BE
 $grep 'SVSP' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_SVSP.bed
 $grep 'PLA2' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_PLA2.bed
 ```
+
+#### Reference genome
+
+We'll use the [Prairie Rattlesnake (_Crotalus viridis_) genome assembly](https://figshare.com/articles/dataset/Prairie_rattlesnake_Crotalus_viridis_genome_assembly/9030782) as the reference in this workflow.
+
+Prepare necessary indexes for downstream analysis.
+
+```
+bwa index CroVir_genome_L77pg_16Aug2017.final_rename.fasta
+samtools faidx CroVir_genome_L77pg_16Aug2017.final_rename.fasta
+./gatk-4.0.8.1/gatk CreateSequenceDictionary -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta
+```
+
 
 ### Read filtering
 
@@ -113,4 +128,6 @@ Run the script.
 `sh trimmomatic.sh sample.list`
 
 ### Read mapping
+
+We'll use `bwa` 'mem' to map our filtered reads to the reference genome.
 
