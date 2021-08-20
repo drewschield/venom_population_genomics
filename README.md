@@ -12,8 +12,8 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [General resources](#general-resources)
 * [Read filtering](#read-filtering)
 * [Read mapping](#read-mapping)
-* Variant calling
-* Variant filtering
+* [Variant calling](#variant-calling)
+* [Variant filtering]($variant-filtering)
 * Analysis of copy-number variation
 * Population structure analysis
 * Demographic analysis
@@ -42,7 +42,7 @@ The steps described below use the following software and assume that dependencie
 * [PSMC](https://github.com/lh3/psmc)
 * [pixy](https://pixy.readthedocs.io/en/latest/)
 * [betascan](https://github.com/ksiewert/BetaScan)
-* [rehh](https://cran.r-project.org/web/packages/rehh/vignettes/rehh.html) - R package.
+* [rehh](https://cran.r-project.org/web/packages/rehh/vignettes/rehh.html) (R package)
 * [R](https://cran.r-project.org/)
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
@@ -192,3 +192,5 @@ Format a file with paths to the GVCF files to call variants from (this is in `re
 ```
 java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T GenotypeGVCFs -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta -V sample.gvcf.list -allSites -o ./vcf/cvco+outgroup.raw.vcf.gz
 ```
+
+### Variant filtering
