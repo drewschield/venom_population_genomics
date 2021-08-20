@@ -12,7 +12,6 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [General resources](#general-resources)
 * [Read filtering](#read-filtering)
 * [Read mapping](#read-mapping)
-* Quantifying mapping results
 * Variant calling
 * Variant filtering
 * Analysis of copy-number variation
@@ -150,3 +149,9 @@ for line in `cat $list`; do
 	bwa mem -t 16 -R "@RG\tID:$name\tLB:CVOS\tPL:illumina\tPU:NovaSeq6000\tSM:$name" ../genome_crotalus/CroVir_genome_L77pg_16Aug2017.final_rename.fasta ./fastq_filtered/${name}_R1_P.trim.fastq.gz ./fastq_filtered/${name}_R2_P.trim.fastq.gz | samtools sort -@ 16 -O bam -T temp -o ./2ref_male/bam/$name.bam -
 done
 ```
+
+Run the script.
+
+`sh bwa_mem.sh sample.list`
+
+### Variant calling
