@@ -194,3 +194,78 @@ java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T GenotypeGVCFs -R CroVir_genome
 ```
 
 ### Variant filtering
+
+Now apply the following filters to the raw variants:
+
+1. Mask repeats
+2. Set low quality/read depth genotypes, indels, and masked repeats as missing genotypes
+3. Set sites with extremely high read depth as missing genotypes and restrict output to chromosome-assigned scaffolds
+
+#### 1. Mask repeats
+
+This step will set the format field of the VCF to 'REP' for all repeat element intervals annotated in the reference genome. The repeat annotation GFF is [here](https://figshare.com/articles/dataset/Prairie_rattlesnake_repeat_element_annotation/9031481).
+
+First, convert the GFF to a sorted BED file.
+
+```
+gunzip CroVir_genome_L77pg_16Aug2017.repeat.masked.final.out.gff3.gz
+grep -v # CroVir_genome_L77pg_16Aug2017.repeat.masked.final.out.gff3 | awk 'BEGIN{OFS="\t"}{print $1,$4-1,$5}' | bedtools sort -i - > CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed
+```
+
+Index the new repeat BED file.
+
+```
+gatk-4.0.8.1/gatk IndexFeatureFile -F CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed
+```
+
+Use GATK VariantFiltration to mask repeat bases.
+
+```
+java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T VariantFiltration -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta --mask CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed --maskName REP --setFilteredGtToNocall --variant ./vcf/cvco+outgroup.raw.vcf.gz --out ./vcf/cvco+outgroup.mask.vcf.gz
+```
+
+#### 2. Set repeats, indels, and low quality genotypes as missing
+
+Use bcftools to filter and tabix to index the output.
+
+```
+bcftools filter --threads 24 -e 'FORMAT/DP<5 | FORMAT/GQ<30 || TYPE="indel" || FILTER="REP"' --set-GTs . -O z -o ./vcf/cvco+outgroup.mask.HardFilter.vcf.gz ./vcf/cvco+outgroup.mask.vcf.gz
+tabix -p vcf ./vcf/cvco+outgroup.mask.HardFilter.vcf.gz
+```
+
+#### 3. Set high coverage sites as missing genotypes and remove unassigned scaffolds
+
+A survey of the read depths at variant sites in the output above found this distribution:
+
+* Mean = 23.9
+* Median = 23.87
+* 2.5% = 4.9
+* 97.5% = 36.24
+
+To avoid potential errors from paralogous mappings, set sites with mean depth > 36.24 as missing genotypes. Also use `resources/chrom.bed` to only keep data from chromosome-assigned scaffolds.
+
+```
+bcftools view --threads 16 -R chrom.bed ./vcf/cvco+outgroup.mask.HardFilter.vcf.gz | bcftools filter --threads 16 -e 'MEAN(FORMAT/DP)>36.24' --set-GTs . -O z -o ./vcf/cvco+outgroup.mask.HardFilter.depth.chrom.vcf.gz
+tabix -p vcf ./vcf/cvco+outgroup.mask.HardFilter.depth.chrom.vcf.gz
+```
+
+#### Parse chromosome-specific VCFs
+
+The script below will extract a VCF per chromosome using `resources/chrom.list`.
+
+`mkdir ./vcf/vcf_chrom-specific_cvco+outgroup`
+
+__*parse_chrom_vcf.sh*__
+
+```
+chromlist=$1
+for chrom in `cat $chromlist`; do
+	echo parsing $chrom VCF
+	bcftools view --threads 16 -r $chrom -O z -o ./vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz ./vcf/cvco+outgroup.mask.HardFilter.depth.chrom.vcf.gz
+	tabix -p vcf ./vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz
+done
+```
+
+Run the script.
+
+`sh parse_chrom_vcf.sh`
