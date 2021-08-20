@@ -93,7 +93,7 @@ samtools faidx CroVir_genome_L77pg_16Aug2017.final_rename.fasta
 
 ### Read filtering
 
-We'll quality trim and filter raw whole genome resequencing reads using `trimmomatic` using these settings:
+We'll quality trim and filter raw whole genome resequencing reads using trimmomatic using these settings:
 
 * Remove 5' end bases if quality is below 20
 * Remove 3' end bases if quality is below 20
@@ -111,9 +111,9 @@ mkdir fastq_filtered
 
 #### Run `trimmomatic` on raw reads
 
-The script below will run `trimmomatic` on the raw data for each sample in `resources/sample.list`.
+The script below will run trimmomatic on the raw data for each sample in `resources/sample.list`.
 
-_*trimmomatic.sh*_
+__*trimmomatic.sh*__
 
 ```
 list=$1
@@ -138,9 +138,9 @@ We'll use `bwa` 'mem' to map our filtered reads to the reference genome.
 
 #### Map reads with `bwa` and sort with `samtools`
 
-The script below will run `bwa` mem on the paired, filtered reads per sample and sort the output bam file.
+The script below will run bwa mem on the paired, filtered reads per sample and sort the output bam file.
 
-_*bwa_mem.sh*_
+__*bwa_mem.sh*__
 
 ```
 list=$1
