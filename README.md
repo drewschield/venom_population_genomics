@@ -18,9 +18,9 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * Analysis of copy-number variation
 * Population structure analysis
 * Demographic analysis
-* Population genetic diversity & differentiation
+* Population genetic diversity and differentiation
 * Signatures of selection
-* Recombination rate variation & linkage disequilibrium
+* Recombination rate variation and linkage disequilibrium
 * Analysis in R
 
 ### Software and dependencies
