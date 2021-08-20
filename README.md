@@ -271,3 +271,57 @@ Run the script.
 `sh parse_chrom_vcf.sh`
 
 ### Analysis of copy-number variation
+
+Compare read depths of pairs of lineages mapped to the Prairie rattlesnake reference to identify regions with evidence of copy number variation.
+
+#### Set up environment
+
+```
+mkdir cnv
+cd cnv
+```
+#### Install CNV-seq dependency
+
+For the Perl script above to work, install the R package cnv in the cnv-seq directory after downloading CNV-seq from GitHub.
+
+The steps detailed on Hilary Parker's R blog [here](https://hilaryparker.com/2014/04/29/writing-an-r-package-from-scratch/) are really helpful for making an R package from what was already present in the directory.
+
+Making a package from the source .R script requires the dependencies:
+* devtools
+* roxygen2
+
+Also need to install a system dependency `libgit2-dev`:
+
+```
+sudo apt-get update -y
+sudo apt-get install -y libgit2-dev
+```
+
+Open R and install dependencies.
+
+```
+R
+install.packages("devtools")
+install.packages("roxygen2")
+library(devtools)
+library(roxygen2)
+setwd("/data3/venom_population_genomics/1_cnv/cnv-seq")
+install("cnv")
+library(cnv)
+```
+
+If the package does not register "Loading required package: ggplot2", something is wrong.
+
+#### Perform analysis
+
+CNV-seq relies on 'hits' derived from samtools, so first obtain hits per sample, then analyze pairs of samples using cnv-seq.pl.
+
+```
+mkdir hits
+mkdir cnv-seq_output
+samtools view -F 4 ../bam/CV0009.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/Cviridis_CV0009.hits
+samtools view -F 4 ../bam/CV0087.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/Coreganus_CV0087.hits
+```
+
+
+ 
