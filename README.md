@@ -14,7 +14,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [Read mapping](#read-mapping)
 * [Variant calling](#variant-calling)
 * [Variant filtering](#variant-filtering)
-* Analysis of copy-number variation
+* [Analysis of copy-number variation](#analysis-of-copy-number-variation)
 * Population structure analysis
 * Demographic analysis
 * Population genetic diversity and differentiation
@@ -269,3 +269,5 @@ done
 Run the script.
 
 `sh parse_chrom_vcf.sh`
+
+### Analysis of copy-number variation
