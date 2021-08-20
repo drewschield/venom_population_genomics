@@ -145,7 +145,7 @@ list=$1
 for line in `cat $list`; do
 	name=$line
 	echo "Mapping filtered $name data to reference"
-	bwa mem -t 16 -R "@RG\tID:$name\tLB:CVOS\tPL:illumina\tPU:NovaSeq6000\tSM:$name" ../genome_crotalus/CroVir_genome_L77pg_16Aug2017.final_rename.fasta ./fastq_filtered/${name}_R1_P.trim.fastq.gz ./fastq_filtered/${name}_R2_P.trim.fastq.gz | samtools sort -@ 16 -O bam -T temp -o ./2ref_male/bam/$name.bam -
+	bwa mem -t 16 -R "@RG\tID:$name\tLB:CVOS\tPL:illumina\tPU:NovaSeq6000\tSM:$name" CroVir_genome_L77pg_16Aug2017.final_rename.fasta ./fastq_filtered/${name}_R1_P.trim.fastq.gz ./fastq_filtered/${name}_R2_P.trim.fastq.gz | samtools sort -@ 16 -O bam -T temp -o ./bam/$name.bam -
 done
 ```
 
@@ -155,7 +155,7 @@ Run the script.
 
 ### Variant calling
 
-Use GATK for individual variant discovery and variant calling among the cohort of samples. This is a two-step process, first using HaplotypeCaller to generate individual genomic VCFs (gVCFs), then using GenotypeGVCFs to call variants among samples and generate an all-sites VCF.
+Use GATK for individual variant discovery and variant calling among the cohort of samples. This is a two-step process, first using HaplotypeCaller to generate individual genomic VCFs (GVCFs), then using GenotypeGVCFs to call variants among samples and generate an all-sites VCF.
 
 #### Set up environment
 
@@ -166,11 +166,11 @@ mkdir vcf
 
 #### Call individual variable sites using HaplotypeCaller
 
-The script below will run GATK HaplotypeCaller on each sample in the `sample.list`. It will also zip and index the gVCF output.
+The script below will run GATK HaplotypeCaller on each sample in the `sample.list`. It will also zip and index the GVCF output.
 
 *Note: GATK HaplotypeCaller will take a small eternity to run on all of these samples one-by-one. Consider breaking up the job into smaller lists of samples and running jobs in parallel.*
 
-GATK_HaplotypeCaller.sh
+__*GATK_HaplotypeCaller.sh*__
 
 ```
 list=$1
@@ -187,5 +187,7 @@ Run the script.
 
 #### Call cohort variant sites and generate an 'all-sites' VCF using GenotypeGVCFs
 
+Format a file with paths to the GVCF files to call variants from (this is in `resources/sample.gvcf.list`).
 
+`java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T GenotypeGVCFs -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta -V sample.gvcf.list -allSites -o ./vcf/cvco+outgroup.raw.vcf.gz`
 
