@@ -11,7 +11,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [Software and dependencies](#software-and-dependencies)
 * [General resources](#general-resources)
 * [Read filtering](#read-filtering)
-* Read mapping
+* [Read mapping](#read-mapping)
 * Quantifying mapping results
 * Variant calling
 * Variant filtering
