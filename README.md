@@ -113,7 +113,8 @@ mkdir fastq_filtered
 
 The script below will run `trimmomatic` on the raw data for each sample in `resources/sample.list`.
 
-*trimmomatic.sh*
+_*trimmomatic.sh*_
+
 ```
 list=$1
 for line in `cat $list`; do
@@ -139,7 +140,8 @@ We'll use `bwa` 'mem' to map our filtered reads to the reference genome.
 
 The script below will run `bwa` mem on the paired, filtered reads per sample and sort the output bam file.
 
-*bwa_mem.sh*
+_*bwa_mem.sh*_
+
 ```
 list=$1
 for line in `cat $list`; do
