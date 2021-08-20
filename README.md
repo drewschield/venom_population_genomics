@@ -51,6 +51,15 @@ Several files will come up repeatedly throughout this workflow, namely annotatio
 * `region_SVMP_scaffold-mi1.bed` - contains coordinates of SVMP region of chromosome 9.
 * `region_SVSP_scaffold-mi2.bed` - contains coordinates of SVSP region of chromosome 10.
 * `region_PLA2_scaffold-mi7.bed` - contains coordinates of PLA2 region of chromosome 15.
+* `centromere_mask.bed` - contains approximate coordinates of centromeres on macrochromosomes.
+
+To generate BED files for each of the three main venom families:
+
+```
+$grep 'SVMP' VenomGene_regions_full_updated.gff | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > gene_SVMP.bed
+$grep 'SVSP' VenomGene_regions_full_updated.gff | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > gene_SVSP.bed
+$grep 'PLA2' VenomGene_regions_full_updated.gff | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > gene_PLA2.bed
+```
 
 To generate BED files for non-venom paralogs for each of the three main venom families:
 
