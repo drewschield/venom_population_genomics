@@ -25,24 +25,26 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 
 ### Software & dependencies
 
-The steps described below use on the following software, and assume that dependencies are on the user path:
+The steps described below use the following software and assume that dependencies are on the user path:
 
-* trimmomatic
-* bwa
-* GATK (v3.8-1-0 and v4.0.8.1)
-* htslib
-* samtools
-* bcftools
-* bgzip
-* tabix
-* vcftools
-* bedtools
-* CNV-seq
-* ADMIXTURE
-* PSMC
+* [trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
+* [bwa](http://bio-bwa.sourceforge.net/)
+* [GATK](https://gatk.broadinstitute.org/hc/en-us) (v3.8-1-0 and v4.0.8.1)
+* [htslib](http://www.htslib.org/)
+* [samtools](http://www.htslib.org/)
+* [bcftools](http://www.htslib.org/)
+* [bgzip](http://www.htslib.org/)
+* [tabix](http://www.htslib.org/)
+* [plink](https://www.cog-genomics.org/plink/)
+* [vcftools](https://vcftools.github.io/index.html)
+* [bedtools](https://bedtools.readthedocs.io/en/latest/)
+* [CNV-seq](https://github.com/hliang/cnv-seq)
+* [ADMIXTURE](https://dalexander.github.io/admixture/publications.html)
+* [PSMC](https://github.com/lh3/psmc)
 * [pixy](https://pixy.readthedocs.io/en/latest/)
-* betascan
-* R
+* [betascan](https://github.com/ksiewert/BetaScan)
+* [rehh](https://cran.r-project.org/web/packages/rehh/vignettes/rehh.html) - R package.
+* [R](https://cran.r-project.org/)
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
 
