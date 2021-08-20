@@ -8,7 +8,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 
 ## Contents
 
-* [Software & dependencies](#software&dependencies)
+* [Software & dependencies](#software-dependencies)
 * [General resources](#general-resources)
 * [Read filtering](#read-filtering)
 * Read mapping
