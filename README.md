@@ -15,7 +15,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [Variant calling](#variant-calling)
 * [Variant filtering](#variant-filtering)
 * [Analysis of copy-number variation](#analysis-of-copy-number-variation)
-* Population structure analysis
+* [Population structure analysis](#population-structure-analysis)
 * Demographic analysis
 * Population genetic diversity and differentiation
 * Signatures of selection
