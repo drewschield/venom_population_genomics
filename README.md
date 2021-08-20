@@ -323,5 +323,93 @@ samtools view -F 4 ../bam/CV0009.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/
 samtools view -F 4 ../bam/CV0087.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/Coreganus_CV0087.hits
 ```
 
+#### Prune unassigned scaffold hits from results
 
+```
+for i in *.hits; do grep -v 'scaffold-un' $i > $i.chrom; done
+rm *.hits
+```
  
+#### Perform CNV analysis using cnv-seq.pl
+
+The total length of chromosome-assigned scaffolds is 1,296,980,472 bp.
+
+Use the following settings:
+
+* log2 = 0.6
+* p = 0.001
+* window-size = 10000 (overwrites log2 and p commands!)
+* bigger-window = 1.5
+* annotate
+* minimum-windows = 4
+
+```
+cd hits
+../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom --ref Cviridis_CV0009.hits.chrom --genome-size 1296980472 --log2 0.6 --p 0.001 --window-size 10000 --bigger-window 1.5 --annotate --minimum-windows 4
+mv *.cnv ../cnv-seq_output/
+mv *.count ../cnv-seq_output/
+```
+
+#### Extract chromosome-specific hits for venom-linked microchromosomes
+
+```
+$for i in *.chrom; do grep -w 'scaffold-mi1' $i > $i.mi1; done
+$for i in *.chrom; do grep 'scaffold-mi2' $i > $i.mi2; done
+$for i in *.chrom; do grep 'scaffold-mi7' $i > $i.mi7; done
+```
+
+#### Perform chromosome-specific analyses
+
+The lengths of microchromosomes 1, 2, and 7 are:
+
+* scaffold-mi1 (chromosome 9) = 22521304
+* scaffold-mi2 (chromosome 10)= 19978503
+* scaffold-mi7 (chromosome 15)= 12380205
+	
+Used the following settings:
+
+* log2 = 0.6
+* p = 0.001
+* bigger-window = 1.5
+* annotate
+* minimum-windows = 4
+
+```
+../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom.mi1 --ref Cviridis_CV0009.hits.chrom.mi1 --genome-size 22521304 --log2 0.6 --p 0.001 --bigger-window 1.5 --annotate --minimum-windows 4
+../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom.mi2 --ref Cviridis_CV0009.hits.chrom.mi2 --genome-size 19978503 --log2 0.6 --p 0.001 --bigger-window 1.5 --annotate --minimum-windows 4
+../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom.mi7 --ref Cviridis_CV0009.hits.chrom.mi7 --genome-size 12380205 --log2 0.6 --p 0.001 --bigger-window 1.5 --annotate --minimum-windows 4
+mv *.cnv ../cnv-seq_output
+mv *.count ../cnv-seq_output
+```
+
+#### Perform higher-resolution analysis on chromosome 15
+
+```
+../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom.mi7 --ref Cviridis_CV0009.hits.chrom.mi7 --genome-size 12380205 --log2 0.6 --p 0.001 --window-size 500 --bigger-window 1.5 --annotate --minimum-windows 4
+mv *.cnv ../cnv-seq_output/
+mv *.count ../cnv-seq_output/
+```
+
+#### Format CNV intervals for masking
+
+Use awk to generate BED files with significant CNV coordinates per microchromosome.
+
+```
+tail -n +2 cnv-seq_output/Coreganus_CV0087.hits.chrom.mi1-vs-Cviridis_CV0009.hits.chrom.mi1.log2-0.6.pvalue-0.001.minw-4.cnv | awk '{if($9>0) print $0}' | sed 's/"//g' | awk 'BEGIN{OFS="\t"}{print $1, $2-1, $3, $11, $12}' > cnv.mi1.CV-CO.bed
+tail -n +2 cnv-seq_output/Coreganus_CV0087.hits.chrom.mi2-vs-Cviridis_CV0009.hits.chrom.mi2.log2-0.6.pvalue-0.001.minw-4.cnv | awk '{if($9>0) print $0}' | sed 's/"//g' | awk 'BEGIN{OFS="\t"}{print $1, $2-1, $3, $11, $12}' > cnv.mi2.CV-CO.bed
+tail -n +2 cnv-seq_output/Coreganus_CV0087.hits.chrom.mi7-vs-Cviridis_CV0009.hits.chrom.mi7.window-500.minw-4.cnv | awk '{if($9>0) print $0}' | sed 's/"//g' | awk 'BEGIN{OFS="\t"}{print $1, $2-1, $3, $11, $12}' > cnv.mi7.CV-CO.bed
+```
+
+Use bedtools to intersect CNVs with venom gene regions for masking.
+
+```
+bedtools intersect -a cnv.mi1.CV-CO.bed -b /data3/venom_population_genomics/venom_annotations/region_SVMP_scaffold-mi1.bed > cnv.mi1.CV-CO.SVMP_region.bed
+bedtools intersect -a cnv.mi2.CV-CO.bed -b /data3/venom_population_genomics/venom_annotations/region_SVSP_scaffold-mi2.bed > cnv.mi2.CV-CO.SVSP_region.bed
+bedtools intersect -a cnv.mi7.CV-CO.bed -b /data3/venom_population_genomics/venom_annotations/region_PLA2_scaffold-mi7.bed > cnv.mi7.CV-CO.PLA2_region.bed
+```
+
+Also, make a concatenated version.
+
+```
+cat cnv.mi1.CV-CO.SVMP_region.bed cnv.mi2.CV-CO.SVSP_region.bed cnv.mi7.CV-CO.PLA2_region.bed > cnv.CV-CO.venom_regions.bed
+```
