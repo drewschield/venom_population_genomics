@@ -413,3 +413,63 @@ Also, make a concatenated version.
 ```
 cat cnv.mi1.CV-CO.SVMP_region.bed cnv.mi2.CV-CO.SVSP_region.bed cnv.mi7.CV-CO.PLA2_region.bed > cnv.CV-CO.venom_regions.bed
 ```
+
+### Population structure analysis
+
+Use ADMIXTURE to infer the most likely K genetic clusters in the data.
+
+#### Set up environment
+
+```
+mkdir population_structure
+cd population_structure
+mkdir input
+```
+
+#### Make input SNP VCF
+
+Use the all-sites VCF generated above to extract biallelic ingroup SNPs with:
+* minor-allele frequencies > 0.05
+* Thinned by 1 kb to reduce effects of linkage
+* At least 60% of individuals with present genotypes
+
+This will refer to the ingroup sample list in `resources/sample.cvco.list`.
+
+```
+vcftools --gzvcf ../vcf/cvco+outgroup.mask.HardFilter.vcf.gz --recode --stdout --keep sample.cvco.list --bed chrom.bed --min-alleles 2 --max-alleles 2 --maf 0.05 --thin 1000 --max-missing 0.4 | bgzip -c > ../vcf/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04.vcf.gz
+```
+
+#### Convert VCF to ADMIXTURE input
+
+Use plink to convert the VCF to .ped input format read by ADMIXTURE.
+
+```
+plink --vcf ../vcf/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04.vcf.gz --make-bed --out ./input/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04 --allow-extra-chr --recode12
+```
+
+#### Run ADMIXTURE over a series of K values
+
+The script below will perform ADMIXTURE analyses for K 1-16.
+
+__*run_admixture.sh*__
+
+```
+ped=$1
+for K in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16; do
+	admixture --cv $ped $K | tee log${K}.out
+done
+```
+
+Run the script.
+
+```
+sh run_admixture ./input/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin10kb.miss04.ped
+```
+
+#### Evaluate the results
+
+Look at the CV error of each K value to determine the best-supported number of genetic clusters.
+
+```
+grep -h CV log*.out
+```
