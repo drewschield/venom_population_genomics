@@ -13,7 +13,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [Read filtering](#read-filtering)
 * [Read mapping](#read-mapping)
 * [Variant calling](#variant-calling)
-* [Variant filtering]($variant-filtering)
+* [Variant filtering](#variant-filtering)
 * Analysis of copy-number variation
 * Population structure analysis
 * Demographic analysis
