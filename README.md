@@ -78,3 +78,18 @@ $grep 'PLA2' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BE
 
 ### Read filtering
 
+We'll quality trim and filter raw whole genome resequencing reads using `trimmomatic` using these settings:
+
+* Remove 5' end bases if quality is below 20
+* Remove 3' end bases if quality is below 20
+* Minimum read length = 32
+* Remove reads if average quality is < 30
+
+#### Set up environment
+
+Get raw fastq data into `fastq` directory. <br /> Make a `fastq_filtered` directory for output.
+
+```
+mkdir fastq
+mkdir fastq_filtered
+```
