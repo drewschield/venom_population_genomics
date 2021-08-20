@@ -113,7 +113,7 @@ mkdir fastq_filtered
 
 The script below will run `trimmomatic` on the raw data for each sample in `resources/sample.list`.
 
-trimmomatic.sh
+*trimmomatic.sh*
 ```
 list=$1
 for line in `cat $list`; do
@@ -131,3 +131,20 @@ Run the script.
 
 We'll use `bwa` 'mem' to map our filtered reads to the reference genome.
 
+#### Set up environment
+
+`mkdir bam`
+
+#### Map reads with `bwa` and sort with `samtools`
+
+The script below will run `bwa` mem on the paired, filtered reads per sample and sort the output bam file.
+
+*bwa_mem.sh*
+```
+list=$1
+for line in `cat $list`; do
+	name=$line
+	echo "Mapping filtered $name data to reference"
+	bwa mem -t 16 -R "@RG\tID:$name\tLB:CVOS\tPL:illumina\tPU:NovaSeq6000\tSM:$name" ../genome_crotalus/CroVir_genome_L77pg_16Aug2017.final_rename.fasta ./fastq_filtered/${name}_R1_P.trim.fastq.gz ./fastq_filtered/${name}_R2_P.trim.fastq.gz | samtools sort -@ 16 -O bam -T temp -o ./2ref_male/bam/$name.bam -
+done
+```
