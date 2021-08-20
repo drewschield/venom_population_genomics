@@ -8,7 +8,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 
 ## Contents
 
-* [Software & dependencies](#software-dependencies)
+* [Dependencies](#dependencies)
 * [General resources](#general-resources)
 * [Read filtering](#read-filtering)
 * Read mapping
@@ -23,7 +23,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * Recombination rate variation & linkage disequilibrium
 * Analysis in R
 
-### Software & dependencies
+### Dependencies
 
 The steps described below use the following software and assume that dependencies are on the user path:
 
