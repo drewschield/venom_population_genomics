@@ -23,6 +23,42 @@ The steps described below use on the following software, and assume that depende
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
 
-Lists and miscellaneous files are in the `processing_files` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
+Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
 
+## Contents
+
+* General resources
+* Read filtering
+* Read mapping
+* Quantifying mapping results
+* Variant calling
+* Variant filtering
+* Analysis of copy-number variation
+* Population structure analysis
+* Demographic analysis
+* Population genetic diversity & differentiation
+* Signatures of selection
+* Recombination rate variation & linkage disequilibrium
+* Analysis in R
+
+### General resources
+
+Several files will come up repeatedly throughout this workflow, namely annotation files with coordinates for venom genes and non-venom paralogs across the genome. These files are each located in the `resources` directory.
+
+* `VenomGene_regions_full_updated.gff` - contains venom gene start/stop coordinates.
+* `VenomGene_main3vgFams_FULL_annotation.gff` - contains full annotations (UTR, exon, etc.) for SVMP, SVSP, and PLA2 genes.
+* `main3vgFams_paralogs_01.12.21.gff` - contains coordinates of non-venom paralogs for comparative analyses.
+* `region_SVMP_scaffold-mi1.bed` - contains coordinates of SVMP region of chromosome 9.
+* `region_SVSP_scaffold-mi2.bed` - contains coordinates of SVSP region of chromosome 10.
+* `region_PLA2_scaffold-mi7.bed` - contains coordinates of PLA2 region of chromosome 15.
+
+To generate BED files for non-venom paralogs for each of the three main venom families:
+
+```
+$grep 'SVMP' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_SVMP.bed
+$grep 'SVSP' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_SVSP.bed
+$grep 'PLA2' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_PLA2.bed
+```
+
+### Read filtering
 
