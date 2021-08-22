@@ -473,3 +473,13 @@ Look at the CV error of each K value to determine the best-supported number of g
 ```
 grep -h CV log*.out
 ```
+
+### Demographic analysis
+
+### Population genetic diversity and differentiation
+
+### Signatures of selection
+
+### Recombination rate variation and linkage disequilibrium analysis
+
+### Analysis in R
