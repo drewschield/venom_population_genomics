@@ -476,6 +476,31 @@ grep -h CV log*.out
 
 ### Demographic analysis
 
+Use the pairwise Markovian sequential coalescent (PSMC) to estimate effective population size through time.
+
+#### Set up environment
+
+```
+mkdir psmc_analysis
+cd psmc_analysis
+mkdir log
+```
+
+#### Install local implementation of PSMC
+
+```
+git clone https://github.com/lh3/psmc.git
+cd psmc
+make
+cd utils
+make
+```
+
+#### Run PSMC analysis
+
+
+
+
 ### Population genetic diversity and differentiation
 
 ### Signatures of selection
