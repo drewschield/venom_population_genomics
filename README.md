@@ -25,6 +25,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 	* [2. Fixed differences](#2-fixed-differences)
 	* [3. iHS](#3-ihs)
 	* [4. ß](#4-ß)
+	* [Selection appendix 1: CNV-masking](#selection-appendix-1:-cnv-masking)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
@@ -1086,6 +1087,9 @@ tail -n +2 co1.svsp.beta.10kb_permutations.txt | awk '$2>1.425567' | wc -l
 tail -n +2 cv1.pla2.beta.1kb_permutations.txt | awk '$2>1.084576' | wc -l
 tail -n +2 co1.pla2.beta.1kb_permutations.txt | awk '$2>1.605109' | wc -l
 ```
+
+### Selection appendix 1: CNV-masking
+
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
