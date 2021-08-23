@@ -30,8 +30,8 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 	* [Selection appendix 3: Estimates for non-venom homologs](#selection-appendix-3-estimates-for-non-venom-homologs)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
-* Appendix 1: Mapping statistics
-* Appendix 2: Check genotype quality
+* [Appendix 1: Mapping statistics](#appendix-1-mapping-statistics)
+* [Appendix 2: Genotype quality](#appendix-2-genotype-quality)
 
 ## Software and dependencies
 
@@ -1099,6 +1099,10 @@ tail -n +2 co1.pla2.beta.1kb_permutations.txt | awk '$2>1.605109' | wc -l
 ## Recombination rate variation and linkage disequilibrium analysis
 
 ## Analysis in R
+
+## Appendix 1: Mapping statistics
+
+## Appendix 2: Genotype quality
 
 
 
