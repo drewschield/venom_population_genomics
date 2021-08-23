@@ -861,6 +861,52 @@ grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b
 
 ### 3. iHS
 
+Use iHS, a measure of haplotype diversity ([Voight et al. 2006](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.0040072)), for scans of selection. This section uses the R package rehh to calculate iHS from phased VCF input. There is a great tutorial on using rehh for this type of analysis from Joanna Meier and Mark Ravinet [here](https://speciationgenomics.github.io/haplotypes/).
+
+#### Set up environment
+
+```
+mkdir rehh
+cd rehh
+mkdir data
+mkdir chrom_results
+```
+
+#### Perform haplotype diversity analysis in rehh R package
+
+The details of this analysis are in `./R/rehhCalculations.R`. The phased VCF input data can be retrieved from here.
+
+#### Format rehh output
+
+Convert iHS tables to BED format.
+
+```
+cd ./chrom_results
+for i in *.txt; do file=`echo $i | sed 's/.txt/.bed/g'`; awk 'BEGIN{OFS="\t"} NR>1 {print $1,$2-1,$2,$3,$4}' $i > $file; done
+```
+
+Concatenate chromosome-specific results.
+
+```
+cat cv.ma1_ihs.bed cv.ma2_ihs.bed cv.ma3_ihs.bed cv.ma4_ihs.bed cv.ma5_ihs.bed cv.ma6_ihs.bed cv.ma7_ihs.bed cv.Z_ihs.bed cv.mi1_ihs.bed cv.mi2_ihs.bed cv.mi3_ihs.bed cv.mi4_ihs.bed cv.mi5_ihs.bed cv.mi6_ihs.bed cv.mi7_ihs.bed cv.mi8_ihs.bed cv.mi9_ihs.bed cv.mi10_ihs.bed > cv.all_ihs.bed
+cat co.ma1_ihs.bed co.ma2_ihs.bed co.ma3_ihs.bed co.ma4_ihs.bed co.ma5_ihs.bed co.ma6_ihs.bed co.ma7_ihs.bed co.Z_ihs.bed co.mi1_ihs.bed co.mi2_ihs.bed co.mi3_ihs.bed co.mi4_ihs.bed co.mi5_ihs.bed co.mi6_ihs.bed co.mi7_ihs.bed co.mi8_ihs.bed co.mi9_ihs.bed co.mi10_ihs.bed > co.all_ihs.bed
+```
+
+Use bedtools map to calculate mean iHS in sliding windows.
+
+```
+for window in 100kb 10kb 1kb; do for pop in cv co; do echo -e "chrom\tstart\tend\tiHS\tp-value" > ../$pop.all_ihs.$window.txt | bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_${window}_window.bed -b $pop.all_ihs.bed -c 4,5 -o mean >> ../$pop.all_ihs.$window.txt; done; done
+echo -e "chrom\tstart\tend\tiHS\tp-value" > ../co.mi7_ihs.250bp.txt | grep -w 'scaffold-mi7' co.all_ihs.bed | bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed -b - -c 4,5 -o mean >> ../co.mi7_ihs.250bp.txt
+echo -e "chrom\tstart\tend\tiHS\tp-value" > ../cv.mi7_ihs.250bp.txt | grep -w 'scaffold-mi7' cv.all_ihs.bed | bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed -b - -c 4,5 -o mean >> ../cv.mi7_ihs.250bp.txt
+cd ..
+```
+
+#### Significance testing
+
+Use random resampling of genome-wide iHS values to compare with mean values for venom gene regions and to quantify how often the same or greater values are observed.
+
+
+
 ### 4. ß
 
 ## Recombination rate variation and linkage disequilibrium analysis
