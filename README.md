@@ -21,6 +21,8 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
 * [Signatures of selection](#signatures-of-selection)
+	* [1. Tajima's D](#1-tajima's-d)
+	* [2. Fixed differences (df)](#fixed-differences-(df))
 	* [3. iHS](#3-ihs)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
