@@ -480,6 +480,8 @@ grep -h CV log*.out
 
 Use the pairwise Markovian sequential coalescent (PSMC) to estimate effective population size through time.
 
+The steps below follow [Al Ludington's PSMC workflow](https://github.com/a-lud/snakes-demographic-history) fairly closely.
+
 ### Set up environment
 
 ```
@@ -544,6 +546,86 @@ bcftools view ./input/CO2_CV0781.vcf.gz | vcfutils.pl vcf2fq | gzip > ./input/CO
 ./psmc/utils/fq2psmcfa -q 20 ./input/CV2_CV0860.fastq.gz > ./input/CV2_CV0860.psmcfa
 ./psmc/utils/fq2psmcfa -q 20 ./input/CO1_CV0151.fastq.gz > ./input/CO1_CV0151.psmcfa
 ./psmc/utils/fq2psmcfa -q 20 ./input/CO2_CV0781.fastq.gz > ./input/CO2_CV0781.psmcfa
+```
+
+### Choice of time segment patterns
+
+These are specified by the '-p' flag in PSMC analysis.
+
+Run analyses with these patterns:
+* 4+5*3+4 (default)
+* 4+10*3+6+8
+* 4+25*2+4+6
+* 4+30*2+4+6+10
+
+### Run main analyses
+
+```
+./psmc/psmc -N25 -t12 -r5 -p "4+30*2+4+6+10" -o ./results/pattern4.CV1_CV0632.diploid.psmc ./input/CV1_CV0632.psmcfa
+./psmc/psmc -N25 -t12 -r5 -p "4+30*2+4+6+10" -o ./results/pattern4.CV2_CV0860.diploid.psmc ./input/CV2_CV0860.psmcfa
+./psmc/psmc -N25 -t12 -r5 -p "4+30*2+4+6+10" -o ./results/pattern4.CO1_CV0151.diploid.psmc ./input/CO1_CV0151.psmcfa
+./psmc/psmc -N25 -t12 -r5 -p "4+30*2+4+6+10" -o ./results/pattern4.CO2_CV0781.diploid.psmc ./input/CO2_CV0781.psmcfa
+```
+
+Repeat the commands above with the different time segment patterns, if desired.
+
+### Bootstrap analysis
+
+Perform a series of bootstraps to vet main analysis results.
+
+#### 1. Generate 'split' psmcfa inputs for bootstrapping
+
+```
+./psmc/utils/splitfa ./input/CV1_CV0632.psmcfa > ./input/CV1_CV0632-split.psmcfa
+./psmc/utils/splitfa ./input/CV2_CV0860.psmcfa > ./input/CV2_CV0860-split.psmcfa
+./psmc/utils/splitfa ./input/CO1_CV0151.psmcfa > ./input/CO1_CV0151-split.psmcfa
+./psmc/utils/splitfa ./input/CO2_CV0781.psmcfa > ./input/CO2_CV0781-split.psmcfa
+```
+
+#### 2. Perform bootstrapping analysis
+
+This will perform 100 bootstrap replicates per sample.
+
+```
+mkdir ./results/bootstrap
+seq 100 | xargs -i echo ./psmc/psmc -N25 -t15 -r5 -b -p "4+30*2+4+6+10" -o ./results/bootstrap/CV1_CV0632.round-{}.psmc ./input/CV1_CV0632-split.psmcfa | sh
+seq 100 | xargs -i echo ./psmc/psmc -N25 -t15 -r5 -b -p "4+30*2+4+6+10" -o ./results/bootstrap/CV2_CV0860.round-{}.psmc ./input/CV2_CV0860-split.psmcfa | sh
+seq 100 | xargs -i echo ./psmc/psmc -N25 -t15 -r5 -b -p "4+30*2+4+6+10" -o ./results/bootstrap/CO1_CV0151.round-{}.psmc ./input/CO1_CV0151-split.psmcfa | sh
+seq 100 | xargs -i echo ./psmc/psmc -N25 -t15 -r5 -b -p "4+30*2+4+6+10" -o ./results/bootstrap/CO2_CV0781.round-{}.psmc ./input/CO2_CV0781-split.psmcfa | sh
+```
+
+### Combine main and bootstrap results and plot
+
+Concatenate main and bootstrap results files.
+
+```
+cat ./results/pattern4.CV1_CV0632.diploid.psmc ./results/bootstrap/CV1_CV0632.round-*.psmc > ./results/pattern4_combined.CV1_CV0632.psmc
+cat ./results/pattern4.CV2_CV0860.diploid.psmc ./results/bootstrap/CV2_CV0860.round-*.psmc > ./results/pattern4_combined.CV2_CV0860.psmc
+cat ./results/pattern4.CO1_CV0151.diploid.psmc ./results/bootstrap/CO1_CV0151.round-*.psmc > ./results/pattern4_combined.CO1_CV0151.psmc
+cat ./results/pattern4.CO2_CV0781.diploid.psmc ./results/bootstrap/CO2_CV0781.round-*.psmc > ./results/pattern4_combined.CO2_CV0781.psmc
+```
+
+Plot combined results.
+
+```
+./psmc/utils/psmc2history.pl ./results/pattern4_combined.CV1_CV0632.psmc | ./psmc/utils/history2ms.pl > ms-cmd.sh
+./psmc/utils/psmc_plot.pl -u 0.2e-08 -g 3 ./results/pattern4_combined.CV1_CV0632 ./results/pattern4_combined.CV1_CV0632.psmc
+./psmc/utils/psmc2history.pl ./results/pattern4_combined.CV2_CV0860.psmc | ./psmc/utils/history2ms.pl > ms-cmd.sh
+./psmc/utils/psmc_plot.pl -u 0.2e-08 -g 3 ./results/pattern4_combined.CV2_CV0860 ./results/pattern4_combined.CV2_CV0860.psmc
+./psmc/utils/psmc2history.pl ./results/pattern4_combined.CO1_CV0151.psmc | ./psmc/utils/history2ms.pl > ms-cmd.sh
+./psmc/utils/psmc_plot.pl -u 0.2e-08 -g 3 ./results/pattern4_combined.CO1_CV0151 ./results/pattern4_combined.CO1_CV0151.psmc
+./psmc/utils/psmc2history.pl ./results/pattern4_combined.CO2_CV0781.psmc | ./psmc/utils/history2ms.pl > ms-cmd.sh
+./psmc/utils/psmc_plot.pl -u 0.2e-08 -g 3 ./results/pattern4_combined.CO2_CV0781 ./results/pattern4_combined.CO2_CV0781.psmc
+```
+
+Convert EPS output to PDF.
+
+```
+cd ./results
+epstopdf.pl pattern4_combined.CV1_CV0632.eps
+epstopdf.pl pattern4_combined.CV2_CV0860.eps
+epstopdf.pl pattern4_combined.CO1_CV0151.eps
+epstopdf.pl pattern4_combined.CO2_CV0781.eps
 ```
 
 ## Population genetic diversity and differentiation
