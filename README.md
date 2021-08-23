@@ -721,6 +721,14 @@ sh concatenatePixyResults.sh 1kb
 
 ## Signatures of selection
 
+Quantify a suite of population genetic estimators designed to test various predictions of neutrality versus directional and balancing selection.
+
+The statistics focused on are:
+1. Tajima's D
+2. Fixed differences (df)
+3. iHS
+4. ß
+
 ## Recombination rate variation and linkage disequilibrium analysis
 
 ## Analysis in R
