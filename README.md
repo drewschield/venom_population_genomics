@@ -21,6 +21,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
 * [Signatures of selection](#signatures-of-selection)
+	* [iHS](#ihs)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
