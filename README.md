@@ -870,6 +870,7 @@ mkdir rehh
 cd rehh
 mkdir data
 mkdir chrom_results
+mkdir significance
 ```
 
 #### Perform haplotype diversity analysis in rehh R package
@@ -905,7 +906,39 @@ cd ..
 
 Use random resampling of genome-wide iHS values to compare with mean values for venom gene regions and to quantify how often the same or greater values are observed.
 
+Extract 10 kb windows for SVMP and SVSP regions, 1 kb windows for PLA2 region. This uses region BED files in `./resources`.
 
+```
+cd significance
+tail -n +2 ../cv.all_ihs.10kb.txt | bedtools intersect -wa -a - -b region_SVMP_scaffold-mi1.bed > region_SVMP_scaffold-mi1.10kb.bed
+tail -n +2 ../cv.all_ihs.10kb.txt | bedtools intersect -wa -a - -b region_SVSP_scaffold-mi2.bed > region_SVSP_scaffold-mi2.10kb.bed
+tail -n +2 ../cv.all_ihs.1kb.txt | bedtools intersect -wa -a - -b region_PLA2_scaffold-mi7.bed > region_PLA2_scaffold-mi7.1kb.bed
+```
+
+Perform blocked permutations using the script below. These can be compared to observed means in venom gene regions.
+
+__*permutations.sh*__
+```
+vbed=$1
+data=$2
+lines=`wc -l $vbed | cut -d' ' -f 1`
+lines_fix=`echo "$(($lines-1))"`
+for perm in $(seq 1 10000); do
+	mean=`tail -n +2 $data | shuf -n 1 | grep -f - -A $lines_fix $data | grep -v -P "\.\t\." | awk '{print $4}' | awk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }'`
+	echo "${perm}\t${mean}"
+done
+```
+
+Run the script.
+
+```
+echo -e "permutation\tiHS" > cv1.svmp.iHS.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svmp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > co1.svmp.iHS.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../co.all_ihs.10kb.txt >> co1.svmp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > cv1.svsp.iHS.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svsp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > co1.svsp.iHS.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../co.all_ihs.10kb.txt >> co1.svsp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > cv1.pla2.iHS.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../cv.all_ihs.1kb.txt >> cv1.pla2.iHS.1kb_permutations.txt
+echo -e "permutation\tiHS" > co1.pla2.iHS.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../co.all_ihs.1kb.txt >> co1.pla2.iHS.1kb_permutations.txt
+```
 
 ### 4. ß
 
