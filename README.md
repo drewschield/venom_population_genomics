@@ -22,7 +22,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
 * [Signatures of selection](#signatures-of-selection)
 	* [1. Tajima's D](#1-tajimas-d)
-	* [2. Fixed differences (df)](#2-fixed-differences-(df))
+	* [2. Fixed differences](#2-fixed-differences)
 	* [3. iHS](#3-ihs)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
@@ -790,7 +790,7 @@ vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_c
 for pop in cv.colorado cv.montana co.california co.idaho; do for window in 100kb 10kb 1kb; do head -n 1 ./results/$pop.scaffold-ma1.$window.Tajima.D > $pop.all.$window.Tajima.D; for chrom in `cat chrom.list`; do tail -n +2 ./results/$pop.$chrom.$window.Tajima.D >> $pop.all.$window.Tajima.D; done; done; done
 ```
 
-### 2. Fixed differences (df)
+### 2. Fixed differences
 
 Regions under positive selection will have a relative abundance of fixed differences between populations. In contrast, regions subject to balancing selection may have fewer fixed differences relative to neutral expectations due to the maintenance of multiple alleles. Here, a strategy to examine fixed differences (df) isto calculate site-based Fst, then calculate the frequency of Fst = 1 SNPs in sliding windows.
 
