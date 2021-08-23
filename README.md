@@ -944,10 +944,10 @@ Calculate p-values by querying the proportion of values that exceed venom region
 
 Mean iHS for CV1 and CO1 populations:
 
-| Population | SVMP      | SVSP      | PLA2      |   |
-|------------|-----------|-----------|-----------|---|
-| CV1        | 0.977623  | 0.8214266 | 0.7144463 |   |
-| CO1        | 0.7008945 | 0.7098776 | 0.3739584 |   |
+| Population | SVMP      | SVSP      | PLA2      |
+|------------|-----------|-----------|-----------|
+| CV1        | 0.977623  | 0.8214266 | 0.7144463 |
+| CO1        | 0.7008945 | 0.7098776 | 0.3739584 |
 
 ```
 $tail -n +2 cv1.svmp.iHS.10kb_permutations.txt | awk '$2>0.977623' | wc -l
