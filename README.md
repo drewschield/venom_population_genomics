@@ -20,7 +20,11 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Population structure analysis](#population-structure-analysis)
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
-* Signatures of selection
+* [Signatures of selection](#signatures-of-selection)
+	[1. Tajima's D](#tajima's-d)
+	[2. Fixed differences (df)](#fixed-differences-(df))
+	[3. iHS](#ihs)
+	[4. ß](#ß)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
@@ -788,6 +792,78 @@ for pop in cv.colorado cv.montana co.california co.idaho; do for window in 100kb
 ```
 
 ### 2. Fixed differences (df)
+
+Regions under positive selection will have a relative abundance of fixed differences between populations. In contrast, regions subject to balancing selection may have fewer fixed differences relative to neutral expectations due to the maintenance of multiple alleles. Here, a strategy to examine fixed differences (df) isto calculate site-based Fst, then calculate the frequency of Fst = 1 SNPs in sliding windows.
+
+#### Set up environment
+
+```
+mkdir df
+cd df
+mkdir results_fst
+mkdir results_df
+```
+
+#### Perform per-site Fst analysis
+
+This script will perform pairwise Fst analysis per site between populations. It uses the same population lists as in Tajima's D analysis above, found in `./resources`.
+
+__*calcFst.sh*__
+```
+list1=$1
+list2=$2
+pop1=$3
+pop2=$4
+for chrom in `cat chrom.list`; do
+	vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --min-alleles 2 --max-alleles 2 --maf 0.05 --weir-fst-pop $list1 --weir-fst-pop $list2 --out ./results_fst/fst.$chrom.$pop1.$pop2
+done
+```
+
+Run the script.
+
+```
+sh calc_fst.sh pop.list.cv.colorado pop.list.cv.montana cv1 cv2
+sh calc_fst.sh pop.list.cv.colorado pop.list.co.california cv1 co1
+sh calc_fst.sh pop.list.co.california pop.list.co.idaho co1 co2
+```
+
+#### Format results to calculate frequency of fixed differences (df) in sliding windows
+
+Parse all SNP positions, and positions with Fst = 1.
+
+```
+cd ./results_fst
+for f in fst.*.fst; do chrom=`echo $f | cut -d. -f2`; pop1=`echo $f | cut -d. -f3`; pop2=`echo $f | cut -d. -f4`; tail -n +2 $f | awk 'BEGIN{OFS="\t"}{print $1,$2-1,$2}' > snp.$chrom.$pop1.$pop2.weir.bed; done
+for f in fst.*.fst; do chrom=`echo $f | cut -d. -f2`; pop1=`echo $f | cut -d. -f3`; pop2=`echo $f | cut -d. -f4`; awk 'BEGIN{OFS="\t"}{if($3==1) print $1,$2-1,$2,$3}' $f > df.$chrom.$pop1.$pop2.weir.bed; done
+cd ..
+```
+
+Use bedtools intersect to count snp positions in sliding windows. This step uses windowed BED files in `./resources/CroVir_genome_{100kb,10kb,1kb,250bp}_window.bed`.
+
+```
+cd ./results_fst
+for chrom in `cat ../chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_100kb_window.bed | bedtools intersect -a - -b snp.$chrom.$pair.weir.bed -c >> window.100kb.snp.$chrom.$pair.txt; done; done
+for chrom in `cat ../chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_10kb_window.bed | bedtools intersect -a - -b snp.$chrom.$pair.weir.bed -c >> window.10kb.snp.$chrom.$pair.txt; done; done
+for chrom in `cat ../chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_1kb_window.bed | bedtools intersect -a - -b snp.$chrom.$pair.weir.bed -c >> window.1kb.snp.$chrom.$pair.txt; done; done
+
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b snp.scaffold-mi7.cv1.co1.weir.bed -c >> window.250bp.snp.scaffold-mi7.cv1.co1.txt
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b snp.scaffold-mi7.cv1.cv2.weir.bed -c >> window.250bp.snp.scaffold-mi7.cv1.cv2.txt
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b snp.scaffold-mi7.co1.co2.weir.bed -c >> window.250bp.snp.scaffold-mi7.co1.co2.txt
+```
+
+Use bedtools intersect to get counts of fixed differences in windows.
+
+```
+for chrom in `cat chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_100kb_window.bed | bedtools intersect -a - -b df.$chrom.$pair.weir.bed -c >> window.100kb.df.$chrom.$pair.txt; done; done
+for chrom in `cat chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_10kb_window.bed | bedtools intersect -a - -b df.$chrom.$pair.weir.bed -c >> window.10kb.df.$chrom.$pair.txt; done; done
+for chrom in `cat chrom.list`; do for pair in cv1.cv2 cv1.co1 co1.co2; do grep -w $chrom CroVir_genome_1kb_window.bed | bedtools intersect -a - -b df.$chrom.$pair.weir.bed -c >> window.1kb.df.$chrom.$pair.txt; done; done
+
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b df.scaffold-mi7.cv1.co1.weir.bed -c >> window.250bp.df.scaffold-mi7.cv1.co1.txt
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b df.scaffold-mi7.cv1.cv2.weir.bed -c >> window.250bp.df.scaffold-mi7.cv1.cv2.txt
+grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b df.scaffold-mi7.co1.co2.weir.bed -c >> window.250bp.df.scaffold-mi7.co1.co2.txt
+```
+
+
 
 ### 3. iHS
 
