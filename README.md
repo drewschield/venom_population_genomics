@@ -20,6 +20,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Population structure analysis](#population-structure-analysis)
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
+	* [Diversity appendix 1: Comparison between venom genic and intergenic regions](#diversity-appendix-1-comparison-between-venom-genic-and-intergenic-regions)
 * [Signatures of selection](#signatures-of-selection)
 	* [1. Tajima's D](#1-tajimas-d)
 	* [2. Fixed differences](#2-fixed-differences)
@@ -28,6 +29,10 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 	* [Selection appendix 1: CNV-masking](#selection-appendix-1-cnv-masking)
 	* [Selection appendix 2: Venom gene point estimates](#selection-appendix-2-venom-gene-point-estimates)
 	* [Selection appendix 3: Estimates for non-venom homologs](#selection-appendix-3-estimates-for-non-venom-homologs)
+	* [Selection appendix 4: Point estimates for all genes](#selection-appendix-4-point-estimates-for-all-genes)
+	* [Selection appendix 5: Point estimates for 'other' venom genes](#selection-appendix-5-point-estimates-for-other-venom-genes)
+	* [Selection appendix 6: Proportion heterozygotes at high ß sites](#selection-appendix-6-proportion-heterozygotes-at-high-ß-sites)
+	* [Selection appendix 7: Trans-species polymorphism](#selection-appendix-7-trans-species-polymorphism)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * [Appendix 1: Mapping statistics](#appendix-1-mapping-statistics)
@@ -727,6 +732,8 @@ sh concatenatePixyResults.sh 10kb
 sh concatenatePixyResults.sh 1kb
 ```
 
+### Diversity appendix 1: Comparison between venom genic and intergenic regions
+
 ## Signatures of selection
 
 Quantify a suite of population genetic estimators designed to test various predictions of neutrality versus directional and balancing selection.
@@ -1095,6 +1102,15 @@ tail -n +2 co1.pla2.beta.1kb_permutations.txt | awk '$2>1.605109' | wc -l
 ### Selection appendix 2: Venom gene point estimates
 
 ### Selection appendix 3: Estimates for non-venom homologs
+
+### Selection appendix 4: Point estimates for all genes
+
+### Selection appendix 5: Point estimates for 'other' venom genes
+
+### Selection appendix 6: Proportion heterozygotes at high ß sites
+
+### Selection appendix 7: Trans-species polymorphism
+
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
