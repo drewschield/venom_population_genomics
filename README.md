@@ -21,10 +21,10 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
 * [Signatures of selection](#signatures-of-selection)
-	[1. Tajima's D](#tajima's-d)
-	[2. Fixed differences (df)](#fixed-differences-(df))
-	[3. iHS](#ihs)
-	[4. ß](#ß)
+	* [Tajima's D](#tajima's-d)
+	* [Fixed differences (df)](#fixed-differences-(df))
+	* [iHS](#ihs)
+	* [ß](#ß)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
@@ -728,12 +728,12 @@ sh concatenatePixyResults.sh 1kb
 Quantify a suite of population genetic estimators designed to test various predictions of neutrality versus directional and balancing selection.
 
 The statistics focused on are:
-1. Tajima's D - tests for deviations in the site-frequency spectrum from neutrality
-2. Fixed differences (df) - tests for signatures of selective sweeps
-3. iHS - tests for extended haplotype homozygosity surrounding target(s) of selection
-4. ß - tests for allele frequency correlation surrounding balanced polymorphism.
+* Tajima's D - tests for deviations in the site-frequency spectrum from neutrality
+* Fixed differences (df) - tests for signatures of selective sweeps
+* iHS - tests for extended haplotype homozygosity surrounding target(s) of selection
+* ß - tests for allele frequency correlation surrounding balanced polymorphism.
 
-### 1. Tajima's D
+### Tajima's D
 
 Perform sliding window analyses of Tajima's D across the genome.
 
@@ -791,7 +791,7 @@ vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_c
 for pop in cv.colorado cv.montana co.california co.idaho; do for window in 100kb 10kb 1kb; do head -n 1 ./results/$pop.scaffold-ma1.$window.Tajima.D > $pop.all.$window.Tajima.D; for chrom in `cat chrom.list`; do tail -n +2 ./results/$pop.$chrom.$window.Tajima.D >> $pop.all.$window.Tajima.D; done; done; done
 ```
 
-### 2. Fixed differences (df)
+### Fixed differences (df)
 
 Regions under positive selection will have a relative abundance of fixed differences between populations. In contrast, regions subject to balancing selection may have fewer fixed differences relative to neutral expectations due to the maintenance of multiple alleles. Here, a strategy to examine fixed differences (df) isto calculate site-based Fst, then calculate the frequency of Fst = 1 SNPs in sliding windows.
 
@@ -863,11 +863,9 @@ grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b
 grep -w scaffold-mi7 CroVir_genome_250bp_window.bed | bedtools intersect -a - -b df.scaffold-mi7.co1.co2.weir.bed -c >> window.250bp.df.scaffold-mi7.co1.co2.txt
 ```
 
+### iHS
 
-
-### 3. iHS
-
-### 4. ß
+### ß
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
