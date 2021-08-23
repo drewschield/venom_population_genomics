@@ -22,7 +22,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 
-### Software and dependencies
+## Software and dependencies
 
 The steps described below use the following software and assume that dependencies are on the user path:
 
@@ -47,9 +47,9 @@ The steps described below use the following software and assume that dependencie
 
 Note: I installed a number of these dependencies using [conda](https://docs.conda.io/en/latest/).
 
-### General resources
+## General resources
 
-#### Processing files
+### Processing files
 
 Several files will come up repeatedly throughout this workflow, namely annotation files with coordinates for venom genes and non-venom paralogs across the genome. These files are each located in the `resources` directory.
 
@@ -77,7 +77,7 @@ $grep 'SVSP' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BE
 $grep 'PLA2' main3vgFams_paralogs_01.12.21.gff | grep -v 'scaffold-un' | awk 'BEGIN{OFS="\t"}{print $1, $4-1, $5}' | bedtools sort -i - > non-venom_paralogs_PLA2.bed
 ```
 
-#### Reference genome
+### Reference genome
 
 Use the [Prairie Rattlesnake (_Crotalus viridis_) genome assembly](https://figshare.com/articles/dataset/Prairie_rattlesnake_Crotalus_viridis_genome_assembly/9030782) as the reference in this workflow.
 
@@ -89,7 +89,7 @@ samtools faidx CroVir_genome_L77pg_16Aug2017.final_rename.fasta
 ./gatk-4.0.8.1/gatk CreateSequenceDictionary -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta
 ```
 
-### Read filtering
+## Read filtering
 
 Quality trim and filter raw whole genome resequencing reads using trimmomatic using these settings:
 
@@ -98,7 +98,7 @@ Quality trim and filter raw whole genome resequencing reads using trimmomatic us
 * Minimum read length = 32
 * Remove reads if average quality is < 30
 
-#### Set up environment
+### Set up environment
 
 Get raw fastq data into `fastq` directory. <br /> Make a `fastq_filtered` directory for output.
 
@@ -107,7 +107,7 @@ mkdir fastq
 mkdir fastq_filtered
 ```
 
-#### Run trimmomatic on raw reads
+### Run trimmomatic on raw reads
 
 The script below will run trimmomatic on the raw data for each sample in `resources/sample.list`.
 
@@ -126,15 +126,15 @@ Run the script.
 
 `sh trimmomatic.sh sample.list`
 
-### Read mapping
+## Read mapping
 
 Use bwa 'mem' to map our filtered reads to the reference genome.
 
-#### Set up environment
+### Set up environment
 
 `mkdir bam`
 
-#### Map reads with bwa and sort with samtools
+### Map reads with bwa and sort with samtools
 
 The script below will run bwa mem on the paired, filtered reads per sample and sort the output bam file.
 
@@ -153,18 +153,18 @@ Run the script.
 
 `sh bwa_mem.sh sample.list`
 
-### Variant calling
+## Variant calling
 
 Use GATK for individual variant discovery and variant calling among the cohort of samples. This is a two-step process, first using HaplotypeCaller to generate individual genomic VCFs (GVCFs), then using GenotypeGVCFs to call variants among samples and generate an all-sites VCF.
 
-#### Set up environment
+### Set up environment
 
 ```
 mkdir gvcf
 mkdir vcf
 ```
 
-#### Call individual variable sites using HaplotypeCaller
+### Call individual variable sites using HaplotypeCaller
 
 The script below will run GATK HaplotypeCaller on each sample in the `sample.list`. It will also zip and index the GVCF output.
 
@@ -185,7 +185,7 @@ Run the script.
 
 `sh GATK_HaplotypeCaller.sh sample.list`
 
-#### Call cohort variant sites and generate an 'all-sites' VCF using GenotypeGVCFs
+### Call cohort variant sites and generate an 'all-sites' VCF using GenotypeGVCFs
 
 Format a file with paths to the GVCF files to call variants from (this is in `resources/sample.gvcf.list`).
 
@@ -193,7 +193,7 @@ Format a file with paths to the GVCF files to call variants from (this is in `re
 java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T GenotypeGVCFs -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta -V sample.gvcf.list -allSites -o ./vcf/cvco+outgroup.raw.vcf.gz
 ```
 
-### Variant filtering
+## Variant filtering
 
 Now apply the following filters to the raw variants:
 
@@ -201,7 +201,7 @@ Now apply the following filters to the raw variants:
 2. Set low quality/read depth genotypes, indels, and masked repeats as missing genotypes
 3. Set sites with extremely high read depth as missing genotypes and restrict output to chromosome-assigned scaffolds
 
-#### 1. Mask repeats
+### 1. Mask repeats
 
 This step will set the format field of the VCF to 'REP' for all repeat element intervals annotated in the reference genome. The repeat annotation GFF is [here](https://figshare.com/articles/dataset/Prairie_rattlesnake_repeat_element_annotation/9031481).
 
@@ -224,7 +224,7 @@ Use GATK VariantFiltration to mask repeat bases.
 java -jar ../gatk-3.8-1-0/GenomeAnalysisTK.jar -T VariantFiltration -R CroVir_genome_L77pg_16Aug2017.final_rename.fasta --mask CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed --maskName REP --setFilteredGtToNocall --variant ./vcf/cvco+outgroup.raw.vcf.gz --out ./vcf/cvco+outgroup.mask.vcf.gz
 ```
 
-#### 2. Set repeats, indels, and low quality genotypes as missing
+### 2. Set repeats, indels, and low quality genotypes as missing
 
 Use bcftools to filter and tabix to index the output.
 
@@ -233,7 +233,7 @@ bcftools filter --threads 24 -e 'FORMAT/DP<5 | FORMAT/GQ<30 || TYPE="indel" || F
 tabix -p vcf ./vcf/cvco+outgroup.mask.HardFilter.vcf.gz
 ```
 
-#### 3. Set high coverage sites as missing genotypes and remove unassigned scaffolds
+### 3. Set high coverage sites as missing genotypes and remove unassigned scaffolds
 
 A survey of the read depths at variant sites in the output above found this distribution:
 
@@ -249,7 +249,7 @@ bcftools view --threads 16 -R chrom.bed ./vcf/cvco+outgroup.mask.HardFilter.vcf.
 tabix -p vcf ./vcf/cvco+outgroup.mask.HardFilter.depth.chrom.vcf.gz
 ```
 
-#### Parse chromosome-specific VCFs
+### Parse chromosome-specific VCFs
 
 The script below will extract a VCF per chromosome using `resources/chrom.list`.
 
@@ -270,17 +270,17 @@ Run the script.
 
 `sh parse_chrom_vcf.sh`
 
-### Analysis of copy-number variation
+## Analysis of copy-number variation
 
 Compare read depths of pairs of lineages mapped to the Prairie rattlesnake reference to identify regions with evidence of copy number variation.
 
-#### Set up environment
+### Set up environment
 
 ```
 mkdir cnv
 cd cnv
 ```
-#### Install CNV-seq dependency
+### Install CNV-seq dependency
 
 For the Perl script above to work, install the R package cnv in the cnv-seq directory after downloading CNV-seq from GitHub.
 
@@ -312,7 +312,7 @@ library(cnv)
 
 If the package does not register "Loading required package: ggplot2", something is wrong.
 
-#### Perform analysis
+### Perform analysis
 
 CNV-seq relies on 'hits' derived from samtools, so first obtain hits per sample, then analyze pairs of samples using cnv-seq.pl.
 
@@ -323,14 +323,14 @@ samtools view -F 4 ../bam/CV0009.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/
 samtools view -F 4 ../bam/CV0087.bam | perl -lane 'print "$F[2]\t$F[3]"' > hits/Coreganus_CV0087.hits
 ```
 
-#### Prune unassigned scaffold hits from results
+### Prune unassigned scaffold hits from results
 
 ```
 for i in *.hits; do grep -v 'scaffold-un' $i > $i.chrom; done
 rm *.hits
 ```
  
-#### Perform CNV analysis using cnv-seq.pl
+### Perform CNV analysis using cnv-seq.pl
 
 The total length of chromosome-assigned scaffolds is 1,296,980,472 bp.
 
@@ -350,7 +350,7 @@ mv *.cnv ../cnv-seq_output/
 mv *.count ../cnv-seq_output/
 ```
 
-#### Extract chromosome-specific hits for venom-linked microchromosomes
+### Extract chromosome-specific hits for venom-linked microchromosomes
 
 ```
 for i in *.chrom; do grep -w 'scaffold-mi1' $i > $i.mi1; done
@@ -358,7 +358,7 @@ for i in *.chrom; do grep 'scaffold-mi2' $i > $i.mi2; done
 for i in *.chrom; do grep 'scaffold-mi7' $i > $i.mi7; done
 ```
 
-#### Perform chromosome-specific analyses
+### Perform chromosome-specific analyses
 
 The lengths of microchromosomes 1, 2, and 7 are:
 
@@ -382,7 +382,7 @@ mv *.cnv ../cnv-seq_output
 mv *.count ../cnv-seq_output
 ```
 
-#### Perform higher-resolution analysis on chromosome 15
+### Perform higher-resolution analysis on chromosome 15
 
 ```
 ../cnv-seq/cnv-seq.pl --test Coreganus_CV0087.hits.chrom.mi7 --ref Cviridis_CV0009.hits.chrom.mi7 --genome-size 12380205 --log2 0.6 --p 0.001 --window-size 500 --bigger-window 1.5 --annotate --minimum-windows 4
@@ -390,7 +390,7 @@ mv *.cnv ../cnv-seq_output/
 mv *.count ../cnv-seq_output/
 ```
 
-#### Format CNV intervals for masking
+### Format CNV intervals for masking
 
 Use awk to generate BED files with significant CNV coordinates per microchromosome.
 
@@ -414,11 +414,11 @@ Also, make a concatenated version.
 cat cnv.mi1.CV-CO.SVMP_region.bed cnv.mi2.CV-CO.SVSP_region.bed cnv.mi7.CV-CO.PLA2_region.bed > cnv.CV-CO.venom_regions.bed
 ```
 
-### Population structure analysis
+## Population structure analysis
 
 Use ADMIXTURE to infer the most likely K genetic clusters in the data.
 
-#### Set up environment
+### Set up environment
 
 ```
 mkdir population_structure
@@ -426,7 +426,7 @@ cd population_structure
 mkdir input
 ```
 
-#### Make input SNP VCF
+### Make input SNP VCF
 
 Use the all-sites VCF generated above to extract biallelic ingroup SNPs with:
 * minor-allele frequencies > 0.05
@@ -439,7 +439,7 @@ This will refer to the ingroup sample list in `resources/sample.cvco.list`.
 vcftools --gzvcf ../vcf/cvco+outgroup.mask.HardFilter.vcf.gz --recode --stdout --keep sample.cvco.list --bed chrom.bed --min-alleles 2 --max-alleles 2 --maf 0.05 --thin 1000 --max-missing 0.4 | bgzip -c > ../vcf/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04.vcf.gz
 ```
 
-#### Convert VCF to ADMIXTURE input
+### Convert VCF to ADMIXTURE input
 
 Use plink to convert the VCF to .ped input format read by ADMIXTURE.
 
@@ -447,7 +447,7 @@ Use plink to convert the VCF to .ped input format read by ADMIXTURE.
 plink --vcf ../vcf/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04.vcf.gz --make-bed --out ./input/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin1kb.miss04 --allow-extra-chr --recode12
 ```
 
-#### Run ADMIXTURE over a series of K values
+### Run ADMIXTURE over a series of K values
 
 The script below will perform ADMIXTURE analyses for K 1-16.
 
@@ -466,7 +466,7 @@ Run the script.
 sh run_admixture ./input/cvco.ingroup.mask.HardFilter.chrom.snp.maf05.thin10kb.miss04.ped
 ```
 
-#### Evaluate the results
+### Evaluate the results
 
 Look at the CV error of each K value to determine the best-supported number of genetic clusters.
 
@@ -474,19 +474,21 @@ Look at the CV error of each K value to determine the best-supported number of g
 grep -h CV log*.out
 ```
 
-### Demographic analysis
+## Demographic analysis
 
 Use the pairwise Markovian sequential coalescent (PSMC) to estimate effective population size through time.
 
-#### Set up environment
+### Set up environment
 
 ```
 mkdir psmc_analysis
 cd psmc_analysis
 mkdir log
+mkdir input
+mkdir results
 ```
 
-#### Install local implementation of PSMC
+### Install local implementation of PSMC
 
 ```
 git clone https://github.com/lh3/psmc.git
@@ -496,15 +498,26 @@ cd utils
 make
 ```
 
-#### Run PSMC analysis
+### Choose samples and prepare inputs
+
+PSMC takes diploid sequences from an individual as input. These can be generated using mappings (i.e., bam files) and individual variant calls using samtools/bcftools.
+
+Individual inputs will be generated for a single male from each population:
+* CV0632 (CV1) 
+* CV0860 (CV2)
+* CV0151 (CO1)
+* CV0781 (CO2)
+
+The list of samples is in `resources/sample.psmc.list`.
 
 
 
+CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed
 
-### Population genetic diversity and differentiation
+## Population genetic diversity and differentiation
 
-### Signatures of selection
+## Signatures of selection
 
-### Recombination rate variation and linkage disequilibrium analysis
+## Recombination rate variation and linkage disequilibrium analysis
 
-### Analysis in R
+## Analysis in R
