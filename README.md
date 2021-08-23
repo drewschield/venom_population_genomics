@@ -19,10 +19,12 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Analysis of copy-number variation](#analysis-of-copy-number-variation)
 * [Population structure analysis](#population-structure-analysis)
 * [Demographic analysis](#demographic-analysis)
-* Population genetic diversity and differentiation
+* [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
 * Signatures of selection
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
+* Appendix 1: Mapping statistics
+* Appendix 2: Check genotype quality
 
 ## Software and dependencies
 
@@ -630,8 +632,130 @@ epstopdf.pl pattern4_combined.CO2_CV0781.eps
 
 ## Population genetic diversity and differentiation
 
+Estimate population genetic diversity and differentiation parameters (π, dxy, Fst) across the genome in sliding windows using [pixy](https://pixy.readthedocs.io/en/latest/).
+
+### Set up environment
+
+```
+mkdir pixy
+cd pixy
+mkdir pixy_results
+mkdir pixy_zarr
+```
+
+Pixy analyses are guided by a two-column, tab-delimited population map with population IDs for each sample. The sample names should match exactly the names in the VCF header. The population map is in `resources/pixy.popmap`.
+
+### Run pixy analysis
+
+*Note: I installed pixy in its own conda environment based in Python 3.6.*
+
+#### 1. Activate pixy conda environment
+
+```
+conda deactivate
+conda activate pixy
+```
+
+#### 2. Run analysis on each chromosome VCF
+
+This script will execute pixy on each of the chromosome-specific VCFs parsed above. It takes the chromosome list in `resources/chrom.list`, a window size (integer), window abbreviation (e.g., 1 kb) as input, and also wants to know if you want to use existing zarr files from a previous run (yes/no).
+
+__*pixyloop.sh*__
+
+```
+list=$1
+window=$2
+abbrev=$3
+ans=$4
+for chrom in `cat $list`; do
+	pixy --stats pi fst dxy --vcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --zarr_path ./pixy_zarr --reuse_zarr $ans --window_size $window --populations pixy.popmap --variant_filter_expression 'DP>=5' --invariant_filter_expression 'DP>=5' --outfile_prefix ./pixy_results/pixy.$chrom.$abbrev
+done
+```
+
+Run the script with various window sizes.
+
+```
+sh pixyloop.sh chrom.list 100000 100kb no
+sh pixyloop.sh chrom.list 10000 10kb yes
+sh pixyloop.sh chrom.list 1000 1kb yes
+```
+
+#### 3. Run higher-resolution analysis on chromosome 15
+
+```
+pixy --stats pi fst dxy --vcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --zarr_path ./pixy_zarr --reuse_zarr yes --window_size 250 --populations pixy.popmap --variant_filter_expression 'DP>=5' --invariant_filter_expression 'DP>=5' --outfile_prefix ./pixy_results/pixy.scaffold-mi7.250bp
+```
+
+### Concatenate results from different chromosomes
+
+The script below will combine chromosome-specific results into a single file per statistic.
+
+__*concatenatePixyResults.sh*__
+
+```
+abbrev=$1
+# concatenate pi output
+head -n 1 ./pixy_results/pixy.scaffold-ma1.${abbrev}_pi.txt > ./pixy_results/pixy.all.${abbrev}_pi.txt
+for chrom in `cat chrom.list`; do
+	tail -n +2 ./pixy_results/pixy.${chrom}.${abbrev}_pi.txt >> ./pixy_results/pixy.all.${abbrev}_pi.txt
+done
+# concatenate dxy output
+head -n 1 ./pixy_results/pixy.scaffold-ma1.${abbrev}_dxy.txt > ./pixy_results/pixy.all.${abbrev}_dxy.txt
+for chrom in `cat chrom.list`; do
+	tail -n +2 ./pixy_results/pixy.${chrom}.${abbrev}_dxy.txt >> ./pixy_results/pixy.all.${abbrev}_dxy.txt
+done
+# concatenate fst output
+head -n 1 ./pixy_results/pixy.scaffold-ma1.${abbrev}_fst.txt > ./pixy_results/pixy.all.${abbrev}_fst.txt
+for chrom in `cat chrom.list`; do
+	tail -n +2 ./pixy_results/pixy.${chrom}.${abbrev}_fst.txt >> ./pixy_results/pixy.all.${abbrev}_fst.txt
+done
+```
+
+Run the script to concatenate results at different window sizes.
+
+```
+sh concatenatePixyResults.sh 100kb
+sh concatenatePixyResults.sh 10kb
+sh concatenatePixyResults.sh 1kb
+```
+
 ## Signatures of selection
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
 ## Analysis in R
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
