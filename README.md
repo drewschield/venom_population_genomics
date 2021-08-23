@@ -874,7 +874,7 @@ mkdir chrom_results
 
 #### Perform haplotype diversity analysis in rehh R package
 
-The details of this analysis are in `./R/rehhCalculations.R`. The phased VCF input data can be retrieved from here.
+The details of this analysis are in `./R/rehhCalculations.R`. The phased VCF input data can be retrieved [here](https://figshare.com/articles/dataset/Phased_VCFs/16415556).
 
 #### Format rehh output
 
