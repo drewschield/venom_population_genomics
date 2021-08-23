@@ -25,7 +25,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 	* [2. Fixed differences](#2-fixed-differences)
 	* [3. iHS](#3-ihs)
 	* [4. ß](#4-ß)
-	* [Selection appendix 1: CNV-masking](#selection-appendix-1:-cnv-masking)
+	* [Selection appendix 1: CNV-masking](#selection-appendix-1-cnv-masking)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
