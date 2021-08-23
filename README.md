@@ -49,6 +49,7 @@ The steps described below use the following software and assume that dependencie
 * [ADMIXTURE](https://dalexander.github.io/admixture/publications.html)
 * [PSMC](https://github.com/lh3/psmc)
 * [pixy](https://pixy.readthedocs.io/en/latest/)
+* [Glactools](https://github.com/grenaud/glactools)
 * [betascan](https://github.com/ksiewert/BetaScan)
 * [rehh](https://cran.r-project.org/web/packages/rehh/vignettes/rehh.html) (R package)
 * [R](https://cran.r-project.org/)
@@ -921,7 +922,7 @@ tail -n +2 ../cv.all_ihs.1kb.txt | bedtools intersect -wa -a - -b region_PLA2_sc
 
 Perform blocked permutations using the script below. These can be compared to observed means in venom gene regions.
 
-__*permutations.sh*__
+__*permutationsIHS.sh*__
 ```
 vbed=$1
 data=$2
@@ -936,12 +937,12 @@ done
 Run the script.
 
 ```
-echo -e "permutation\tiHS" > cv1.svmp.iHS.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svmp.iHS.10kb_permutations.txt
-echo -e "permutation\tiHS" > co1.svmp.iHS.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../co.all_ihs.10kb.txt >> co1.svmp.iHS.10kb_permutations.txt
-echo -e "permutation\tiHS" > cv1.svsp.iHS.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svsp.iHS.10kb_permutations.txt
-echo -e "permutation\tiHS" > co1.svsp.iHS.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../co.all_ihs.10kb.txt >> co1.svsp.iHS.10kb_permutations.txt
-echo -e "permutation\tiHS" > cv1.pla2.iHS.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../cv.all_ihs.1kb.txt >> cv1.pla2.iHS.1kb_permutations.txt
-echo -e "permutation\tiHS" > co1.pla2.iHS.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../co.all_ihs.1kb.txt >> co1.pla2.iHS.1kb_permutations.txt
+echo -e "permutation\tiHS" > cv1.svmp.iHS.10kb_permutations.txt; sh permutationsIHS.sh region_SVMP_scaffold-mi1.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svmp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > co1.svmp.iHS.10kb_permutations.txt; sh permutationsIHS.sh region_SVMP_scaffold-mi1.10kb.bed ../co.all_ihs.10kb.txt >> co1.svmp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > cv1.svsp.iHS.10kb_permutations.txt; sh permutationsIHS.sh region_SVSP_scaffold-mi2.10kb.bed ../cv.all_ihs.10kb.txt >> cv1.svsp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > co1.svsp.iHS.10kb_permutations.txt; sh permutationsIHS.sh region_SVSP_scaffold-mi2.10kb.bed ../co.all_ihs.10kb.txt >> co1.svsp.iHS.10kb_permutations.txt
+echo -e "permutation\tiHS" > cv1.pla2.iHS.1kb_permutations.txt; sh permutationsIHS.sh region_PLA2_scaffold-mi7.1kb.bed ../cv.all_ihs.1kb.txt >> cv1.pla2.iHS.1kb_permutations.txt
+echo -e "permutation\tiHS" > co1.pla2.iHS.1kb_permutations.txt; sh permutationsIHS.sh region_PLA2_scaffold-mi7.1kb.bed ../co.all_ihs.1kb.txt >> co1.pla2.iHS.1kb_permutations.txt
 ```
 
 Calculate p-values by querying the proportion of values that exceed venom region means.
@@ -966,7 +967,125 @@ $tail -n +2 co1.pla2.iHS.1kb_permutations.txt | awk '$2>0.3739584' | wc -l
 
 Balancing selection can produce clusters of intermediate-frequency alleles surrounding a balanced polymorphism. [BetaScan](https://github.com/ksiewert/BetaScan) is designed to identify this signature in a genome scan approach. The method is described in [Siewert and Voight 2017](https://academic.oup.com/mbe/article/34/11/2996/3988103?login=true).
 
+#### Set up environment
 
+```
+mkdir beta
+cd beta
+mkdir data
+mkdir input
+mkdir results
+mkdir parameter_permutations
+mkdir significance
+```
+
+*Note: BetaScan uses ACF format, which can be converted from VCF format using [glactools](https://github.com/grenaud/glactools), so make sure it's installed.*
+
+#### Convert VCF data to ACF format
+
+These analyses will use the same phased variants as in iHS analysis above, which can be downloaded [here](https://figshare.com/articles/dataset/Phased_VCFs/16415556).
+
+Perform format conversion with glactools for each scaffold in `./resources/chrom.list`.
+
+```
+for chrom in `cat chrom.list`; do glactools vcfm2acf --onlyGT --fai ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta.fai ./data/viridis.phased.$chrom.vcf > ./input/cv1.phased.$chrom.acf.gz; done
+for chrom in `cat chrom.list`; do glactools vcfm2acf --onlyGT --fai ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta.fai ./data/oreganus.phased.$chrom.vcf > ./input/co1.phased.$chrom.acf.gz; done
+```
+
+#### Convert ACF to BetaScan input format
+
+```
+for pop in cv1 co1; do for chrom in `cat chrom.list`; do glactools acf2betascan --fold ./input/$pop.phased.$chrom.acf.gz | gzip > ./input/$pop.phased.$chrom.beta.txt.gz; done; done
+```
+
+#### Run BetaScan
+
+```
+for pop in cv1 co1; do for chrom in `cat chrom.list`; do python BetaScan.py -i ./input/$pop.phased.$chrom.beta.txt.gz -fold -o ./results/$pop.phased.$chrom.betascores.txt; done; done
+```
+
+#### Convert results to BED format, concatenate, and calculate mean ß in sliding windows
+
+```
+cd ./results
+for beta in *.betascores.txt; do file=`echo $beta | sed 's/.txt/.bed/g'`; chrom=`echo $beta | cut -d. -f3`; tail -n +2 $beta | awk -v chromvar="$chrom" 'BEGIN{OFS="\t"}{print chromvar,$1-1,$1,$2}' > $file; done
+cat cv1.phased.scaffold-ma1.betascores.bed cv1.phased.scaffold-ma2.betascores.bed cv1.phased.scaffold-ma3.betascores.bed cv1.phased.scaffold-ma4.betascores.bed cv1.phased.scaffold-ma5.betascores.bed cv1.phased.scaffold-ma6.betascores.bed cv1.phased.scaffold-ma7.betascores.bed cv1.phased.scaffold-Z.betascores.bed cv1.phased.scaffold-mi1.betascores.bed cv1.phased.scaffold-mi2.betascores.bed cv1.phased.scaffold-mi3.betascores.bed cv1.phased.scaffold-mi4.betascores.bed cv1.phased.scaffold-mi5.betascores.bed cv1.phased.scaffold-mi6.betascores.bed cv1.phased.scaffold-mi7.betascores.bed cv1.phased.scaffold-mi8.betascores.bed cv1.phased.scaffold-mi9.betascores.bed cv1.phased.scaffold-mi10.betascores.bed > cv1.phased.all.betascores.bed
+cat co1.phased.scaffold-ma1.betascores.bed co1.phased.scaffold-ma2.betascores.bed co1.phased.scaffold-ma3.betascores.bed co1.phased.scaffold-ma4.betascores.bed co1.phased.scaffold-ma5.betascores.bed co1.phased.scaffold-ma6.betascores.bed co1.phased.scaffold-ma7.betascores.bed co1.phased.scaffold-Z.betascores.bed co1.phased.scaffold-mi1.betascores.bed co1.phased.scaffold-mi2.betascores.bed co1.phased.scaffold-mi3.betascores.bed co1.phased.scaffold-mi4.betascores.bed co1.phased.scaffold-mi5.betascores.bed co1.phased.scaffold-mi6.betascores.bed co1.phased.scaffold-mi7.betascores.bed co1.phased.scaffold-mi8.betascores.bed co1.phased.scaffold-mi9.betascores.bed co1.phased.scaffold-mi10.betascores.bed > co1.phased.all.betascores.bed
+echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.100kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_100kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.100kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.10kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_10kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.10kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.1kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_1kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.1kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.100kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_100kb_window.bed -b co1.phased.all.betascores.bed -c 4 -o mean >> co1.phased.all.betascores.100kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.10kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_10kb_window.bed -b co1.phased.all.betascores.bed -c 4 -o mean >> co1.phased.all.betascores.10kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.1kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_1kb_window.bed -b co1.phased.all.betascores.bed -c 4 -o mean >> co1.phased.all.betascores.1kb.txt
+echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.250bp.txt; grep -w 'scaffold-mi7' /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed | bedtools map -a - -b cv1.phased.scaffold-mi7.betascores.bed -c 4 -o mean >> cv1.phased.scaffold-mi7.betascores.250bp.txt
+echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.250bp.txt; grep -w 'scaffold-mi7' /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed | bedtools map -a - -b co1.phased.scaffold-mi7.betascores.bed -c 4 -o mean >> co1.phased.scaffold-mi7.betascores.250bp.txt
+cd ..
+```
+
+#### Perform analysis with permuted settings
+
+Run BetaScan with a series of different window size (-w) and scaling constant (-p) parameters.
+
+```
+for p in 2 5 10 20; do for w in 500 1000 2000; do python BetaScan.py -i ./input/cv1.phased.scaffold-mi1.beta.txt.gz -fold -p $p -w $w -o ./permutations/cv1.phased.scaffold-mi1.p$p.w$w.betascores.txt; done; done
+```
+
+#### Significance testing
+
+BetaScan does not output a measure of significance by default. Use random resampling of the genome-wide dataset compared to values observed in venom gene regions to quantify how often the same or greater values are observed.
+
+Extract 10 kb windows for SVMP and SVSP regions, 1 kb windows for PLA2.
+
+```
+cd ./significance
+tail -n +2 ../results/cv1.phased.all.betascores.10kb.txt | bedtools intersect -wa -a - -b /data3/venom_population_genomics/general/region_SVMP_scaffold-mi1.bed > region_SVMP_scaffold-mi1.10kb.bed
+tail -n +2 ../results/cv1.phased.all.betascores.10kb.txt | bedtools intersect -wa -a - -b /data3/venom_population_genomics/general/region_SVSP_scaffold-mi2.bed > region_SVSP_scaffold-mi2.10kb.bed
+tail -n +2 ../results/cv1.phased.all.betascores.1kb.txt | bedtools intersect -wa -a - -b /data3/venom_population_genomics/general/region_PLA2_scaffold-mi7.bed > region_PLA2_scaffold-mi7.1kb.bed
+```
+
+Perform permutations that can be compared to observed means in venom regions with this script.
+
+__*permutationsBeta.sh*__
+```
+vbed=$1
+data=$2
+lines=`wc -l $vbed | cut -d' ' -f 1`
+lines_fix=`echo "$(($lines-1))"`
+for perm in $(seq 1 10000); do
+	mean=`tail -n +2 $data | shuf -n 1 | grep -f - -A $lines_fix $data | awk '{print $4}' | awk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }'`
+	echo "${perm}\t${mean}"
+done
+```
+
+Run the script.
+
+```
+echo -e "permutation\tbeta" > cv1.svmp.beta.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../results/cv1.phased.all.betascores.10kb.txt >> cv1.svmp.beta.10kb_permutations.txt
+echo -e "permutation\tbeta" > co1.svmp.beta.10kb_permutations.txt; sh permutations.sh region_SVMP_scaffold-mi1.10kb.bed ../results/co1.phased.all.betascores.10kb.txt >> co1.svmp.beta.10kb_permutations.txt
+echo -e "permutation\tbeta" > cv1.svsp.beta.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../results/cv1.phased.all.betascores.10kb.txt >> cv1.svsp.beta.10kb_permutations.txt
+echo -e "permutation\tbeta" > co1.svsp.beta.10kb_permutations.txt; sh permutations.sh region_SVSP_scaffold-mi2.10kb.bed ../results/co1.phased.all.betascores.10kb.txt >> co1.svsp.beta.10kb_permutations.txt
+echo -e "permutation\tbeta" > cv1.pla2.beta.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../results/cv1.phased.all.betascores.1kb.txt >> cv1.pla2.beta.1kb_permutations.txt
+echo -e "permutation\tbeta" > co1.pla2.beta.1kb_permutations.txt; sh permutations.sh region_PLA2_scaffold-mi7.1kb.bed ../results/co1.phased.all.betascores.1kb.txt >> co1.pla2.beta.1kb_permutations.txt
+```
+
+Calculate p-values by querying the proportion of values that exceed venom region means.
+
+Mean Beta for CV1 and CO1 populations:
+
+| Population | SVMP      | SVSP      | PLA2      |
+|------------|-----------|-----------|-----------|
+| CV1        | 2.292093  | 2.073221  | 1.084576  |
+| CO1        | 2.137636  | 1.425567  | 1.605109  |
+
+
+```
+tail -n +2 cv1.svmp.beta.10kb_permutations.txt | awk '$2>2.292093' | wc -l
+tail -n +2 co1.svmp.beta.10kb_permutations.txt | awk '$2>2.137636' | wc -l
+tail -n +2 cv1.svsp.beta.10kb_permutations.txt | awk '$2>2.073221' | wc -l
+tail -n +2 co1.svsp.beta.10kb_permutations.txt | awk '$2>1.425567' | wc -l
+tail -n +2 cv1.pla2.beta.1kb_permutations.txt | awk '$2>1.084576' | wc -l
+tail -n +2 co1.pla2.beta.1kb_permutations.txt | awk '$2>1.605109' | wc -l
+```
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
