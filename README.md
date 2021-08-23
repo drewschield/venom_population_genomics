@@ -6,6 +6,8 @@ This repository contains details on the data processing and analysis steps taken
 
 Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
 
+If you have any questions, you can email me at drew.schield[at]colorado.edu.
+
 ## Contents
 
 * [Software and dependencies](#software-and-dependencies)
@@ -16,7 +18,7 @@ Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` director
 * [Variant filtering](#variant-filtering)
 * [Analysis of copy-number variation](#analysis-of-copy-number-variation)
 * [Population structure analysis](#population-structure-analysis)
-* Demographic analysis
+* [Demographic analysis](#demographic-analysis)
 * Population genetic diversity and differentiation
 * Signatures of selection
 * Recombination rate variation and linkage disequilibrium analysis
@@ -510,9 +512,39 @@ Individual inputs will be generated for a single male from each population:
 
 The list of samples is in `resources/sample.psmc.list`.
 
+#### 1. Call consensus variants per individual and index output
 
+This will also mask sites overlapping repeat annotations.
 
-CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed
+```
+bcftools mpileup -C 50 -q 30 -Q 25 -Ou -f ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta ../bam/CV0632.bam | bcftools call -c | bcftools filter --SnpGap 10 -i "DP>=5 & DP<=50" | bcftools view --exclude-types indels -T ^CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed | bcftools sort --temp-dir ./input/temp_CV0632 -Oz -o ./input/CV1_CV0632.vcf.gz
+bcftools mpileup -C 50 -q 30 -Q 25 -Ou -f ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta ../bam/CV0860.bam | bcftools call -c | bcftools filter --SnpGap 10 -i "DP>=5 & DP<=50" | bcftools view --exclude-types indels -T ^CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed | bcftools sort --temp-dir ./input/temp_CV0860 -Oz -o ./input/CV2_CV0860.vcf.gz
+bcftools mpileup -C 50 -q 30 -Q 25 -Ou -f ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta ../bam/CV0151.bam | bcftools call -c | bcftools filter --SnpGap 10 -i "DP>=5 & DP<=50" | bcftools view --exclude-types indels -T ^CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed | bcftools sort --temp-dir ./input/temp_CV0151 -Oz -o ./input/CO1_CV0151.vcf.gz
+bcftools mpileup -C 50 -q 30 -Q 25 -Ou -f ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta ../bam/CV0781.bam | bcftools call -c | bcftools filter --SnpGap 10 -i "DP>=5 & DP<=50" | bcftools view --exclude-types indels -T ^CroVir_genome_L77pg_16Aug2017.repeat.masked.final.sort.bed | bcftools sort --temp-dir ./input/temp_CV0781 -Oz -o ./input/CO2_CV0781.vcf.gz
+
+tabix -p vcf ./input/CV1_CV0632.vcf.gz
+tabix -p vcf ./input/CV2_CV0860.vcf.gz
+tabix -p vcf ./input/CO1_CV0151.vcf.gz
+tabix -p vcf ./input/CO2_CV0781.vcf.gz
+```
+
+#### 2. Get diploid sequence
+
+```
+bcftools view ./input/CV1_CV0632.vcf.gz | vcfutils.pl vcf2fq | gzip > ./input/CV1_CV0632.fastq.gz
+bcftools view ./input/CV2_CV0860.vcf.gz | vcfutils.pl vcf2fq | gzip > ./input/CV2_CV0860.fastq.gz
+bcftools view ./input/CO1_CV0151.vcf.gz | vcfutils.pl vcf2fq | gzip > ./input/CO1_CV0151.fastq.gz
+bcftools view ./input/CO2_CV0781.vcf.gz | vcfutils.pl vcf2fq | gzip > ./input/CO2_CV0781.fastq.gz
+```
+
+#### 3. Convert to psmcfa format
+
+```
+./psmc/utils/fq2psmcfa -q 20 ./input/CV1_CV0632.fastq.gz > ./input/CV1_CV0632.psmcfa
+./psmc/utils/fq2psmcfa -q 20 ./input/CV2_CV0860.fastq.gz > ./input/CV2_CV0860.psmcfa
+./psmc/utils/fq2psmcfa -q 20 ./input/CO1_CV0151.fastq.gz > ./input/CO1_CV0151.psmcfa
+./psmc/utils/fq2psmcfa -q 20 ./input/CO2_CV0781.fastq.gz > ./input/CO2_CV0781.psmcfa
+```
 
 ## Population genetic diversity and differentiation
 
