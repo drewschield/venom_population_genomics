@@ -964,6 +964,10 @@ $tail -n +2 co1.pla2.iHS.1kb_permutations.txt | awk '$2>0.3739584' | wc -l
 
 ### 4. ß
 
+Balancing selection can produce clusters of intermediate-frequency alleles surrounding a balanced polymorphism. [BetaScan](https://github.com/ksiewert/BetaScan) is designed to identify this signature in a genome scan approach. The method is described in [Siewert and Voight 2017](https://academic.oup.com/mbe/article/34/11/2996/3988103?login=true).
+
+
+
 ## Recombination rate variation and linkage disequilibrium analysis
 
 ## Analysis in R
