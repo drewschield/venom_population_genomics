@@ -20,11 +20,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Population structure analysis](#population-structure-analysis)
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
-* [Signatures of selection](#signatures-of-selection) </br>
-	* [Tajima's D](#tajima's-d)  </br>
-	* [Fixed differences](#fixed-differences)  </br>
-	* [iHS](#ihs)  </br>
-	* [ß](#ß)  </br>
+* [Signatures of selection](#signatures-of-selection)
 * Recombination rate variation and linkage disequilibrium analysis
 * Analysis in R
 * Appendix 1: Mapping statistics
