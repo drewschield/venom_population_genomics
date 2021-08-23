@@ -724,10 +724,74 @@ sh concatenatePixyResults.sh 1kb
 Quantify a suite of population genetic estimators designed to test various predictions of neutrality versus directional and balancing selection.
 
 The statistics focused on are:
-1. Tajima's D
-2. Fixed differences (df)
-3. iHS
-4. ß
+1. Tajima's D - tests for deviations in the site-frequency spectrum from neutrality
+2. Fixed differences (df) - tests for signatures of selective sweeps
+3. iHS - tests for extended haplotype homozygosity surrounding target(s) of selection
+4. ß - tests for allele frequency correlation surrounding balanced polymorphism.
+
+### 1. Tajima's D
+
+Perform sliding window analyses of Tajima's D across the genome.
+
+#### Set up environment
+
+```
+mkdir tajima_d
+cd tajima_d
+mkdir results
+```
+
+This step requires sample lists per population. These are in `/resources`:
+
+* pop.list.cv.colorado
+* pop.list.cv.montana
+* pop.list.co.california
+* pop.list.co.idaho
+
+#### Estimate Tajima's D in sliding windows in each population
+
+The script below will run sliding window analysis on each population. It expects a window size (integer) and window size abbreviation (e.g., 1 kb) as arguments.
+
+__*windowTajimaD.sh*__
+```
+window=$1
+abbrev=$2
+for chrom in `cat chrom.list`; do
+	vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.cv.colorado --TajimaD $window --out ./results/cv.colorado.$chrom.$abbrev
+	vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.cv.montana --TajimaD $window --out ./results/cv.montana.$chrom.$abbrev
+	vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.co.california --TajimaD $window --out ./results/co.california.$chrom.$abbrev
+	vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.co.idaho --TajimaD $window --out ./results/co.idaho.$chrom.$abbrev
+done
+```
+
+Run the script.
+
+```
+sh window_tajima_d.sh 100000 100kb
+sh window_tajima_d.sh 10000 10kb
+sh window_tajima_d.sh 1000 1kb
+```
+
+#### Run higher-resolution analyses on chromosome 15
+
+```
+vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --keep pop.list.cv.colorado --TajimaD 250 --out cv.colorado.scaffold-mi7.250bp
+vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --keep pop.list.cv.montana --TajimaD 250 --out cv.montana.scaffold-mi7.250bp
+vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --keep pop.list.co.california --TajimaD 250 --out co.california.scaffold-mi7.250bp
+vcftools --gzvcf /media/drewschield/DuskBucket/crotalus/vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --keep pop.list.co.idaho --TajimaD 250 --out co.idaho.scaffold-mi7.250bp
+```
+
+#### Concatenate results
+
+```
+for pop in cv.colorado cv.montana co.california co.idaho; do for window in 100kb 10kb 1kb; do head -n 1 ./results/$pop.scaffold-ma1.$window.Tajima.D > $pop.all.$window.Tajima.D; for chrom in `cat chrom.list`; do tail -n +2 ./results/$pop.$chrom.$window.Tajima.D >> $pop.all.$window.Tajima.D; done; done; done
+```
+
+### 2. Fixed differences (df)
+
+### 3. iHS
+
+### 4. ß
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
