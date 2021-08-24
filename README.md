@@ -4,7 +4,7 @@
 
 This repository contains details on the data processing and analysis steps taken in analyses of population genomic variation and signatures of selection in major rattlesnake venom gene regions. This workflow is a companion to the methods description in Schield et al. (in review). Analysis of recombination rates and statistics requiring phased variants are based on [recombination maps](https://figshare.com/articles/dataset/Rattlesnake_Recombination_Maps/11283224) and phased data from [Schield et al. _MBE_ 37: 1272-1294](https://academic.oup.com/mbe/advance-article-abstract/doi/10.1093/molbev/msaa003/5700722).
 
-Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment.
+Lists and reference files (i.e., BED, GFF, etc.) are in the `resources` directory. Shell and Python scripts are in respective `shell` and `python` directories. R scripts are in the `R` directory. Note that you may need to adjust the organization of file locations to suit your environment. This workflow assumes that you are returning to the main working directory after each major section (e.g., mapping, variant calling).
 
 If you have any questions, you can email me at drew.schield[at]colorado.edu.
 
@@ -20,7 +20,8 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 * [Population structure analysis](#population-structure-analysis)
 * [Demographic analysis](#demographic-analysis)
 * [Population genetic diversity and differentiation](#population-genetic-diversity-and-differentiation)
-	* [Diversity appendix 1: Comparison between venom genic and intergenic regions](#diversity-appendix-1-comparison-between-venom-genic-and-intergenic-regions)
+	* [Diversity appendix 1: CNV-masking](#diversity-appendix-1-cnv-masking)
+	* [Diversity appendix 2: Comparison between venom genic and intergenic regions](#diversity-appendix-1-comparison-between-venom-genic-and-intergenic-regions)
 * [Signatures of selection](#signatures-of-selection)
 	* [1. Tajima's D](#1-tajimas-d)
 	* [2. Fixed differences](#2-fixed-differences)
@@ -732,7 +733,177 @@ sh concatenatePixyResults.sh 10kb
 sh concatenatePixyResults.sh 1kb
 ```
 
-### Diversity appendix 1: Comparison between venom genic and intergenic regions
+### Diversity appendix 1: CNV-masking
+
+Mask results in genomic windows overlapping with significant copy-number variation between C. viridis and C. oreganus.
+
+#### Set up environment
+
+```
+mkdir cnv_masked_results
+cd cnv_masked_results
+mkdir mask_bed
+```
+
+#### Use bedtools intersect to get 10 kb windows to mask
+
+This uses the CNV BED file in `resources/cnv.CV-CO.venom_regions.bed`.
+
+```
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do tail -n +2 ../pixy/pixy_results/pixy.$chrom.10kb_pi.txt | grep 'CO1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4}' | bedtools intersect -u -a - -b cnv.CV-CO.venom_regions.bed > mask_bed/cnv_filter.10kb.$chrom.pixy.bed; done
+```
+
+#### Use bedtools intersect to get 1 kb and 250 bp windows to mask
+
+```
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do tail -n +2 ../pixy/pixy_results/pixy.$chrom.1kb_pi.txt | grep 'CO1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4}' | bedtools intersect -u -a - -b mask_bed/cnv_filter.10kb.$chrom.pixy.bed > mask_bed/cnv_filter.1kb.$chrom.pixy.bed; done
+tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_pi.txt | grep 'CO1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4}' | bedtools intersect -u -a - -b mask_bed/cnv_filter.10kb.scaffold-mi7.pixy.bed > mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed
+```
+
+#### Mask results including CO1 and CO2 in CNV windows as 'NA's
+
+The script `cnvMaskSelection.py` has code blocks to recognize different results files and mask windows based on BED files in `resources`.
+
+The script is in the `python` directory. Its third argument asks whether to print the input file header (yes/no).
+
+Mask pixy results with script.
+
+```
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_pi.txt > pi.$chrom.$window.co1.cnvMask.txt; python cnvMaskSelection.py /data3/venom_population_genomics/3_selection/pixy/pixy_results/pixy.$chrom.${window}_pi.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep 'CO1' >> pi.$chrom.$window.co1.cnvMask.txt; done; done
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_pi.txt > pi.$chrom.$window.co2.cnvMask.txt; python cnvMaskSelection.py /data3/venom_population_genomics/3_selection/pixy/pixy_results/pixy.$chrom.${window}_pi.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep 'CO2' >> pi.$chrom.$window.co2.cnvMask.txt; done; done
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_pi.txt > pi.scaffold-mi7.250bp.co1.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_pi.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep 'CO1' >> pi.scaffold-mi7.250bp.co1.cnvMask.txt
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_pi.txt > pi.scaffold-mi7.250bp.co2.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_pi.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep 'CO2' >> pi.scaffold-mi7.250bp.co2.cnvMask.txt
+
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_dxy.txt > dxy.$chrom.$window.cv1co1.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.$chrom.${window}_dxy.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep -P "CV1\tCO1" >> dxy.$chrom.$window.cv1co1.cnvMask.txt; done; done
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_dxy.txt > dxy.$chrom.$window.co1co2.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.$chrom.${window}_dxy.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep -P "CO1\tCO2" >> dxy.$chrom.$window.co1co2.cnvMask.txt; done; done
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_dxy.txt > dxy.scaffold-mi7.250bp.cv1co1.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_dxy.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep -P "CV1\tCO1" >> dxy.scaffold-mi7.250bp.cv1co1.cnvMask.txt
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_dxy.txt > dxy.scaffold-mi7.250bp.co1co2.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_dxy.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep -P "CO1\tCO2" >> dxy.scaffold-mi7.250bp.co1co2.cnvMask.txt
+
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_fst.txt > fst.$chrom.$window.cv1co1.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.$chrom.${window}_fst.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep -P "CV1\tCO1" >> fst.$chrom.$window.cv1co1.cnvMask.txt; done; done
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 10kb 1kb; do head -n 1 ../pixy/pixy_results/pixy.$chrom.${window}_fst.txt > fst.$chrom.$window.co1co2.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.$chrom.${window}_fst.txt ./mask_bed/cnv_filter.$window.$chrom.pixy.bed no | grep -P "CO1\tCO2" >> fst.$chrom.$window.co1co2.cnvMask.txt; done; done
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_fst.txt > fst.scaffold-mi7.250bp.cv1co1.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_fst.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep -P "CV1\tCO1" >> fst.scaffold-mi7.250bp.cv1co1.cnvMask.txt
+head -n 1 ../pixy/pixy_results/pixy.scaffold-mi7.250bp_fst.txt > fst.scaffold-mi7.250bp.co1co2.cnvMask.txt; python cnvMaskSelection.py ../pixy/pixy_results/pixy.scaffold-mi7.250bp_fst.txt ./mask_bed/cnv_filter.250bp.scaffold-mi7.pixy.bed no | grep -P "CO1\tCO2" >> fst.scaffold-mi7.250bp.co1co2.cnvMask.txt
+```
+
+### Diversity appendix 2: Comparison between venom genic and intergenic regions
+
+Compare π, dxy, and Fst between genic and intergenic intervals of venom gene regions.
+
+#### Set up environment
+
+```
+mkdir gene_vs_intergenic
+cd gene_vs_intergenic
+```
+
+#### Use bedtools to parse intergenic and genic windows in the SVMP region
+
+Intergenic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_intergenic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_intergenic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_intergenic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_intergenic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_intergenic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_intergenic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_intergenic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_intergenic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_intergenic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_intergenic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVMP_scaffold-mi1.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVMP.bed >> svmp_intergenic.fst_mean.co1co2.txt
+```
+
+Genic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_genic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_genic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_genic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp_genic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_genic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_genic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp_genic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_genic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_genic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp_genic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVMP.bed >> svmp_genic.fst_mean.co1co2.txt
+```
+
+#### Use bedtools to parse intergenic and genic windows in the SVSP region
+
+Intergenic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_intergenic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_intergenic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_intergenic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_intergenic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_intergenic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_intergenic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_intergenic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_intergenic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_intergenic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_intergenic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_SVSP_scaffold-mi2.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_SVSP.bed >> svsp_intergenic.fst_mean.co1co2.txt
+```
+
+Genic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_genic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_genic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_genic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp_genic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_genic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_genic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp_genic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_genic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_genic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp_genic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_SVSP.bed >> svsp_genic.fst_mean.co1co2.txt
+```
+
+#### Use bedtools to parse intergenic and genic windows in the PLA2 region
+
+Intergenic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_intergenic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_intergenic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_intergenic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_intergenic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_intergenic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_intergenic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_intergenic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_intergenic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_intergenic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_intergenic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -wb -a region_PLA2_scaffold-mi7.bed -b - | awk 'BEGIN{OFS="\t"}{print $4,$5,$6,$7}' | bedtools intersect -v -a - -b gene_PLA2.bed >> pla2_intergenic.fst_mean.co1co2.txt
+```
+
+Genic:
+
+```
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_genic.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_genic.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_genic.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2_genic.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_genic.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_genic.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2_genic.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_genic.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_genic.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2_genic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.fst_mean.co1co2.txt
+```
+
 
 ## Signatures of selection
 
