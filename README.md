@@ -1806,8 +1806,8 @@ tail -n +2 oreganus.recomb.bpen10.windowed.1kb.centromereMask.txt | bedtools int
 #### Mask CNV windows
 
 ```
-python cnvMask.py oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.10kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.txt
-python cnvMask.py oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.1kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnvMask.txt
+python cnvMaskRecombination.py oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.10kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.txt
+python cnvMaskRecombination.py oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.1kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnvMask.txt
 ```
 
 ### Calculate diversity-independent recombination rates
@@ -1847,6 +1847,154 @@ python correctionPi.py ./correction_pi/oreganus.recomb.bpen10.windowed.10kb.cent
 
 python correctionPi.py ./correction_pi/viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask+pi.txt > viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.piCorrected.txt 
 python correctionPi.py ./correction_pi/oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask+pi.txt > oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask.piCorrected.txt 
+```
+
+### Recombination rates in venom gene regions
+
+With masked/formatted recombination rate estimates, extract data for venom gene regions and chromosome backgrounds.
+
+#### Use bedtools to extract recombination rates in venom gene regions
+
+```
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_SVMP_scaffold-mi1.bed > recomb.bpen10.viridis.region_SVMP_scaffold-mi1.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.cnv_mask.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_SVMP_scaffold-mi1.bed > recomb.bpen10.oreganus.region_SVMP_scaffold-mi1.bed
+
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_SVSP_scaffold-mi2.bed > recomb.bpen10.viridis.region_SVSP_scaffold-mi2.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.cnv_mask.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_SVSP_scaffold-mi2.bed > recomb.bpen10.oreganus.region_SVSP_scaffold-mi2.bed
+
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_PLA2_scaffold-mi7.bed > recomb.bpen10.viridis.region_PLA2_scaffold-mi7.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.cnv_mask.sort.bed -b /data3/venom_population_genomics/venom_annotations/region_PLA2_scaffold-mi7.bed > recomb.bpen10.oreganus.region_PLA2_scaffold-mi7.bed
+```
+
+#### Use bedtools to extract recombination rates in chromosome backgrounds
+
+```
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b region_SVMP_scaffold-mi1.bed -wa -v | grep -w 'scaffold-mi1' > recomb.bpen10.viridis.bkgd.scaffold-mi1.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.sort.bed -b region_SVMP_scaffold-mi1.bed -wa -v | grep -w 'scaffold-mi1' > recomb.bpen10.oreganus.bkgd.scaffold-mi1.bed
+
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b region_SVSP_scaffold-mi2.bed -wa -v | grep -w 'scaffold-mi2' > recomb.bpen10.viridis.bkgd.scaffold-mi2.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.sort.bed -b region_SVSP_scaffold-mi2.bed -wa -v | grep -w 'scaffold-mi2' > recomb.bpen10.oreganus.bkgd.scaffold-mi2.bed
+
+bedtools intersect -a recombination_maps/viridis.recomb.bpen10.sort.bed -b region_PLA2_scaffold-mi7.bed -wa -v | grep -w 'scaffold-mi7' > recomb.bpen10.viridis.bkgd.scaffold-mi7.bed
+bedtools intersect -a recombination_maps/oreganus.recomb.bpen10.sort.bed -b region_PLA2_scaffold-mi7.bed -wa -v | grep -w 'scaffold-mi7' > recomb.bpen10.oreganus.bkgd.scaffold-mi7.bed
+```
+
+#### Extract recombination rates for non-venom homologs
+
+```
+for venom in SVMP SVSP PLA2; do echo -e "chrom\tstart\tend\tmean\tp0.500\tp0.025\tp0.975" > viridis.recomb.bpen10.windowed.10kb.non-venom_${venom}.piCorrected.txt; tail -n +2 viridis.recomb.bpen10.windowed.10kb.centromereMask.piCorrected.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> viridis.recomb.bpen10.windowed.10kb.non-venom_${venom}.piCorrected.txt; done
+for venom in SVMP SVSP PLA2; do echo -e "chrom\tstart\tend\tmean\tp0.500\tp0.025\tp0.975" > oreganus.recomb.bpen10.windowed.10kb.non-venom_${venom}.piCorrected.txt; tail -n +2 oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.piCorrected.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> oreganus.recomb.bpen10.windowed.10kb.non-venom_${venom}.piCorrected.txt; done
+```
+
+### Decay of linkage disequilibrium in venom gene regions and flanking regions
+
+#### Set up environment
+
+```
+mkdir ld_decay
+cd ld_decay
+```
+
+#### Calculate haplotype-based r2 in C. viridis and format output for analysis
+
+The concatenation and formatting commands were adapted from rmf's post on this Biostars
+forum: https://www.biostars.org/p/300381/
+
+SVMP info:
+scaffold-mi1 13851005 14474729
+length = 623,724 bp
+
+Venom:
+```
+vcftools --vcf viridis.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 13851005 --to-bp 14474729 --maf 0.1 --hap-r2 --out viridis.phased.svmp
+cat viridis.phased.svmp.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.svmp.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf viridis.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 13227280 --to-bp 13851004 --maf 0.1 --hap-r2 --out viridis.phased.svmp-up
+vcftools --vcf viridis.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 14474730 --to-bp 15098454 --maf 0.1 --hap-r2 --out viridis.phased.svmp-down
+tail -n +2 viridis.phased.svmp-down.hap.ld | cat viridis.phased.svmp-up.hap.ld - > viridis.phased.svmp-flank.hap.ld 
+cat viridis.phased.svmp-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.svmp-flank.hap.ld.summary
+```
+
+SVSP info:
+scaffold-mi2 8518727 9031362
+length = 512,635 bp
+
+Venom:
+```
+vcftools --vcf viridis.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 8518727 --to-bp 9031362 --maf 0.1 --hap-r2 --out viridis.phased.svsp
+cat viridis.phased.svsp.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.svsp.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf viridis.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 8006091 --to-bp 8518726 --maf 0.1 --hap-r2 --out viridis.phased.svsp-up
+vcftools --vcf viridis.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 9031363 --to-bp 9543998 --maf 0.1 --hap-r2 --out viridis.phased.svsp-down
+tail -n +2 viridis.phased.svsp-down.hap.ld | cat viridis.phased.svsp-up.hap.ld - > viridis.phased.svsp-flank.hap.ld 
+cat viridis.phased.svsp-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.svsp-flank.hap.ld.summary
+```
+
+PLA2 info:
+scaffold-mi7 3009890 3053778
+length = 43,888 bp
+
+Venom:
+```
+vcftools --vcf viridis.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 3009890 --to-bp 3053778 --maf 0.1 --hap-r2 --out viridis.phased.pla2
+cat viridis.phased.pla2.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.pla2.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf viridis.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 2966001 --to-bp 3009889 --maf 0.1 --hap-r2 --out viridis.phased.pla2-up
+vcftools --vcf viridis.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 3053779 --to-bp 3097667 --maf 0.1 --hap-r2 --out viridis.phased.pla2-down
+tail -n +2 viridis.phased.pla2-down.hap.ld | cat viridis.phased.pla2-up.hap.ld - > viridis.phased.pla2-flank.hap.ld 
+cat viridis.phased.pla2-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > viridis.phased.pla2-flank.hap.ld.summary
+```
+
+#### Calculate haplotype-based r2 in C. oreganus and format output for analysis
+
+Here, we need to add steps to remove CNV SNPs from C. oreganus prior to LD analysis.
+
+SVMP
+Venom:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 13851005 --to-bp 14474729 --exclude-bed cnv.CV-CO.venom_regions.bed --maf 0.1 --hap-r2 --out oreganus.phased.svmp
+cat oreganus.phased.svmp.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.svmp.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 13227280 --to-bp 13851004 --maf 0.1 --hap-r2 --out oreganus.phased.svmp-up
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi1.vcf --chr scaffold-mi1 --from-bp 14474730 --to-bp 15098454 --maf 0.1 --hap-r2 --out oreganus.phased.svmp-down
+tail -n +2 oreganus.phased.svmp-down.hap.ld | cat oreganus.phased.svmp-up.hap.ld - > oreganus.phased.svmp-flank.hap.ld 
+cat oreganus.phased.svmp-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.svmp-flank.hap.ld.summary
+```
+
+SVSP
+Venom:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 8518727 --to-bp 9031362 --exclude-bed cnv.CV-CO.venom_regions.bed --maf 0.1 --hap-r2 --out oreganus.phased.svsp
+cat oreganus.phased.svsp.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.svsp.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 8006091 --to-bp 8518726 --maf 0.1 --hap-r2 --out oreganus.phased.svsp-up
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi2.vcf --chr scaffold-mi2 --from-bp 9031363 --to-bp 9543998 --maf 0.1 --hap-r2 --out oreganus.phased.svsp-down
+tail -n +2 oreganus.phased.svsp-down.hap.ld | cat oreganus.phased.svsp-up.hap.ld - > oreganus.phased.svsp-flank.hap.ld 
+cat oreganus.phased.svsp-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.svsp-flank.hap.ld.summary
+```
+
+PLA2
+Venom:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 3009890 --to-bp 3053778 --exclude-bed cnv.CV-CO.venom_regions.bed --maf 0.1 --hap-r2 --out oreganus.phased.pla2
+cat oreganus.phased.pla2.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.pla2.hap.ld.summary
+```
+Flanks:
+```
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 2966001 --to-bp 3009889 --maf 0.1 --hap-r2 --out oreganus.phased.pla2-up
+vcftools --vcf /data3/venom_population_genomics/2_recombination/vcf_phased/oreganus.phased.scaffold-mi7.vcf --chr scaffold-mi7 --from-bp 3053779 --to-bp 3097667 --maf 0.1 --hap-r2 --out oreganus.phased.pla2-down
+tail -n +2 oreganus.phased.pla2-down.hap.ld | cat oreganus.phased.pla2-up.hap.ld - > oreganus.phased.pla2-flank.hap.ld 
+cat oreganus.phased.pla2-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {return v < 0 ? -v : v}BEGIN{OFS="\t"}{print abs($3-$2),$5}' | sort -k1,1n > oreganus.phased.pla2-flank.hap.ld.summary
 ```
 
 ## Analysis in R
@@ -1899,38 +2047,3 @@ vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.Hard
 vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi2.vcf.gz --site-quality --out cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi2
 vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --site-quality --out cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
