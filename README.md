@@ -904,7 +904,6 @@ echo -e "chrom\tstart\tend\tfst_mean" > pla2_genic.fst_mean.cv1cv2.txt; tail -n 
 echo -e "chrom\tstart\tend\tfst_mean" > pla2_genic.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b gene_PLA2.bed >> pla2_genic.fst_mean.co1co2.txt
 ```
 
-
 ## Signatures of selection
 
 Quantify a suite of population genetic estimators designed to test various predictions of neutrality versus directional and balancing selection.
@@ -1190,8 +1189,10 @@ for pop in cv1 co1; do for chrom in `cat chrom.list`; do python BetaScan.py -i .
 ```
 cd ./results
 for beta in *.betascores.txt; do file=`echo $beta | sed 's/.txt/.bed/g'`; chrom=`echo $beta | cut -d. -f3`; tail -n +2 $beta | awk -v chromvar="$chrom" 'BEGIN{OFS="\t"}{print chromvar,$1-1,$1,$2}' > $file; done
+
 cat cv1.phased.scaffold-ma1.betascores.bed cv1.phased.scaffold-ma2.betascores.bed cv1.phased.scaffold-ma3.betascores.bed cv1.phased.scaffold-ma4.betascores.bed cv1.phased.scaffold-ma5.betascores.bed cv1.phased.scaffold-ma6.betascores.bed cv1.phased.scaffold-ma7.betascores.bed cv1.phased.scaffold-Z.betascores.bed cv1.phased.scaffold-mi1.betascores.bed cv1.phased.scaffold-mi2.betascores.bed cv1.phased.scaffold-mi3.betascores.bed cv1.phased.scaffold-mi4.betascores.bed cv1.phased.scaffold-mi5.betascores.bed cv1.phased.scaffold-mi6.betascores.bed cv1.phased.scaffold-mi7.betascores.bed cv1.phased.scaffold-mi8.betascores.bed cv1.phased.scaffold-mi9.betascores.bed cv1.phased.scaffold-mi10.betascores.bed > cv1.phased.all.betascores.bed
 cat co1.phased.scaffold-ma1.betascores.bed co1.phased.scaffold-ma2.betascores.bed co1.phased.scaffold-ma3.betascores.bed co1.phased.scaffold-ma4.betascores.bed co1.phased.scaffold-ma5.betascores.bed co1.phased.scaffold-ma6.betascores.bed co1.phased.scaffold-ma7.betascores.bed co1.phased.scaffold-Z.betascores.bed co1.phased.scaffold-mi1.betascores.bed co1.phased.scaffold-mi2.betascores.bed co1.phased.scaffold-mi3.betascores.bed co1.phased.scaffold-mi4.betascores.bed co1.phased.scaffold-mi5.betascores.bed co1.phased.scaffold-mi6.betascores.bed co1.phased.scaffold-mi7.betascores.bed co1.phased.scaffold-mi8.betascores.bed co1.phased.scaffold-mi9.betascores.bed co1.phased.scaffold-mi10.betascores.bed > co1.phased.all.betascores.bed
+
 echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.100kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_100kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.100kb.txt
 echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.10kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_10kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.10kb.txt
 echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.1kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_1kb_window.bed -b cv1.phased.all.betascores.bed -c 4 -o mean >> cv1.phased.all.betascores.1kb.txt
@@ -1200,6 +1201,7 @@ echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.10kb.txt; bedtoo
 echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.1kb.txt; bedtools map -a /data3/venom_population_genomics/general/CroVir_genome_1kb_window.bed -b co1.phased.all.betascores.bed -c 4 -o mean >> co1.phased.all.betascores.1kb.txt
 echo -e "chrom\tstart\tend\tBeta1*" > cv1.phased.all.betascores.250bp.txt; grep -w 'scaffold-mi7' /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed | bedtools map -a - -b cv1.phased.scaffold-mi7.betascores.bed -c 4 -o mean >> cv1.phased.scaffold-mi7.betascores.250bp.txt
 echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.all.betascores.250bp.txt; grep -w 'scaffold-mi7' /data3/venom_population_genomics/general/CroVir_genome_250bp_window.bed | bedtools map -a - -b co1.phased.scaffold-mi7.betascores.bed -c 4 -o mean >> co1.phased.scaffold-mi7.betascores.250bp.txt
+
 cd ..
 ```
 
@@ -1270,7 +1272,62 @@ tail -n +2 co1.pla2.beta.1kb_permutations.txt | awk '$2>1.605109' | wc -l
 
 ### Selection appendix 1: CNV-masking
 
+Use `cnvMaskSelection.py` in the `python` directory to mask results overlapping with copy-number variants in CO1 and CO2. See [Diversity appendix 1: CNV-masking](#diversity-appendix-1-cnv-masking) for more details on the script.
+
+#### Set up environment
+
+```
+cd cnv_masked_results
+```
+
+Make sure that the appropriate BED files from `resources` are placed in the `mask_bed` subdirectory.
+
+#### Mask Tajima's D results
+
+```
+for pop in co.california co.idaho; do head -n 1 ../tajima_d/$pop.all.10kb.Tajima.D > $pop.all.10kb.cnvMask.Tajima.D; python cnvMaskSelection.py ../tajima_d/$pop.all.10kb.Tajima.D ./mask_bed/cnv_filter.10kb.bed no >> $pop.all.10kb.cnvMask.Tajima.D; done
+for pop in co.california co.idaho; do head -n 1 ../tajima_d/$pop.all.1kb.Tajima.D > $pop.all.1kb.cnvMask.Tajima.D; python cnvMaskSelection.py ../tajima_d/$pop.all.1kb.Tajima.D ./mask_bed/cnv_filter.1kb.bed no >> $pop.all.1kb.cnvMask.Tajima.D; done
+for pop in co.california co.idaho; do head -n 1 ../tajima_d/$pop.scaffold-mi7.250bp.Tajima.D > $pop.scaffold-mi7.250bp.cnvMask.Tajima.D; python cnvMaskSelection.py ../tajima_d/$pop.scaffold-mi7.250bp.Tajima.D ./mask_bed/cnv_filter.250bp.bed no >> $pop.scaffold-mi7.250bp.cnvMask.Tajima.D; done
+```
+
+#### Mask df results
+
+```
+for pop in cv1.co1 co1.co2; do head -n 1 ../df/results_df/window.10kb.df_prop.all.$pop.txt > window.10kb.df_prop.all.$pop.cnvMask.txt; python cnvMaskSelection.py ../df/results_df/window.10kb.df_prop.all.$pop.txt ./mask_bed/cnv_filter.10kb.bed no >> window.10kb.df_prop.all.$pop.cnvMask.txt; done
+for pop in cv1.co1 co1.co2; do head -n 1 ../df/results_df/window.1kb.df_prop.all.$pop.txt > window.1kb.df_prop.all.$pop.cnvMask.txt; python cnvMaskSelection.py ../df/results_df/window.1kb.df_prop.all.$pop.txt ./mask_bed/cnv_filter.1kb.bed no >> window.1kb.df_prop.all.$pop.cnvMask.txt; done
+for pop in cv1.co1 co1.co2; do head -n 1 ../df/results_df/window.250bp.df_prop.scaffold-mi7.$pop.txt > window.250bp.df_prop.scaffold-mi7.$pop.cnvMask.txt; python cnvMaskSelection.py ../df/results_df/window.250bp.df_prop.scaffold-mi7.$pop.txt ./mask_bed/cnv_filter.250bp.bed no >> window.250bp.df_prop.scaffold-mi7.$pop.cnvMask.txt; done
+```
+
+#### Mask iHS results
+
+```
+$head -n 1 ../rehh/co.all_ihs.10kb.txt > co.all_ihs.10kb.cnvMask.txt; python cnvMaskSelection.py ../rehh/co.all_ihs.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> co.all_ihs.10kb.cnvMask.txt
+$head -n 1 ../rehh/co.all_ihs.1kb.txt > co.all_ihs.1kb.cnvMask.txt; python cnvMaskSelection.py ../rehh/co.all_ihs.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> co.all_ihs.1kb.cnvMask.txt
+$head -n 1 ../rehh/co.mi7_ihs.250bp.txt > co.mi7_ihs.250bp.cnvMask.txt; python cnvMaskSelection.py ../rehh/co.all_ihs.1kb.txt ./mask_bed/cnv_filter.250bp.bed no >> co.mi7_ihs.250bp.cnvMask.txt
+```
+
+#### Mask ß results
+
+```
+head -n 1 /data3/venom_population_genomics/3_selection/beta/results/co1.phased.all.betascores.10kb.txt > co1.phased.all.betascores.10kb.cnvMask.txt; python cnvMaskSelection.py /data3/venom_population_genomics/3_selection/beta/results/co1.phased.all.betascores.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> co1.phased.all.betascores.10kb.cnvMask.txt
+head -n 1 /data3/venom_population_genomics/3_selection/beta/results/co1.phased.all.betascores.1kb.txt > co1.phased.all.betascores.1kb.cnvMask.txt; python cnvMaskSelection.py /data3/venom_population_genomics/3_selection/beta/results/co1.phased.all.betascores.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> co1.phased.all.betascores.1kb.cnvMask.txt
+echo -e "chrom\tstart\tend\tBeta1*" > co1.phased.scaffold-mi7.betascores.250bp.cnvMask.txt; python cnvMaskSelection.py /data3/venom_population_genomics/3_selection/beta/results/co1.phased.scaffold-mi7.betascores.250bp.txt ./mask_bed/cnv_filter.250bp.bed no >> co1.phased.scaffold-mi7.betascores.250bp.cnvMask.txt
+```
+
 ### Selection appendix 2: Venom gene point estimates
+
+It will be useful to quantify gene-specific mean values for population genetic estimators for the major venom genes.
+
+#### Set up environment
+
+```
+mkdir gene_means
+cd gene_means
+```
+
+These analyses will use the coordinates in `resources/gene_venom.bed`.
+
+
 
 ### Selection appendix 3: Estimates for non-venom homologs
 
