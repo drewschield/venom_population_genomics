@@ -1563,11 +1563,11 @@ These commands will use the population lists and sliding window BED files in `re
 
 #### Quantify the number of heterozygotes per site using vcftools (HWE output)
 
+These analyses will be performed on phased variants in CV1 and CO1 populations from [here](https://figshare.com/articles/dataset/Phased_VCFs/16415556).
+
 ```
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.cv.colorado --hardy --out cv1.$chrom; done
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.cv.montana --hardy --out cv2.$chrom; done
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.co.california --hardy --out co1.$chrom; done
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz --keep pop.list.co.idaho --hardy --out co2.$chrom; done
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --vcf viridis.phased.$chrom.vcf --keep pop.list.cv.colorado --hardy --out cv1.$chrom; done
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --vcf oreganus.phased.$chrom.vcf --keep pop.list.co.california --hardy --out co1.$chrom; done
 ```
 
 #### Format outputs so they are useful
@@ -1575,30 +1575,19 @@ for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do vcftools --gzvcf ../vcf/
 The script `formatHeterozygosity.py` in the `python` subdirectory is designed to remove sites with no data and quantify the proportion of heterozygotes at each SNP. It also removes sites with HWE p-values < 0.0001, and allows the user to specify the minimum number of genotyped individuals at a SNP to be included (e.g., 10).
 
 ```
-python formatHeterozygosity.py cv1.scaffold-mi1.hwe 10 > het.cv1.scaffold-mi1.txt
-python formatHeterozygosity.py cv1.scaffold-mi2.hwe 10 > het.cv1.scaffold-mi2.txt
-python formatHeterozygosity.py cv1.scaffold-mi7.hwe 10 > het.cv1.scaffold-mi7.txt
-
-python formatHeterozygosity.py cv2.scaffold-mi1.hwe 10 > het.cv2.scaffold-mi1.txt
-python formatHeterozygosity.py cv2.scaffold-mi2.hwe 10 > het.cv2.scaffold-mi2.txt
-python formatHeterozygosity.py cv2.scaffold-mi7.hwe 10 > het.cv2.scaffold-mi7.txt
-
-python formatHeterozygosity.py co1.scaffold-mi1.hwe 10 > het.co1.scaffold-mi1.txt
-python formatHeterozygosity.py co1.scaffold-mi2.hwe 10 > het.co1.scaffold-mi2.txt
-python formatHeterozygosity.py co1.scaffold-mi7.hwe 10 > het.co1.scaffold-mi7.txt
-
-python formatHeterozygosity.py co2.scaffold-mi1.hwe 10 > het.co2.scaffold-mi1.txt
-python formatHeterozygosity.py co2.scaffold-mi2.hwe 10 > het.co2.scaffold-mi2.txt
-python formatHeterozygosity.py co2.scaffold-mi7.hwe 10 > het.co2.scaffold-mi7.txt
+python formatHeterozygosity.py cv1.scaffold-mi1.hwe 18 > het.cv1.scaffold-mi1.txt
+python formatHeterozygosity.py cv1.scaffold-mi2.hwe 18 > het.cv1.scaffold-mi2.txt
+python formatHeterozygosity.py cv1.scaffold-mi7.hwe 18 > het.cv1.scaffold-mi7.txt
+python formatHeterozygosity.py co1.scaffold-mi1.hwe 17 > het.co1.scaffold-mi1.txt
+python formatHeterozygosity.py co1.scaffold-mi2.hwe 17 > het.co1.scaffold-mi2.txt
+python formatHeterozygosity.py co1.scaffold-mi7.hwe 17 > het.co1.scaffold-mi7.txt
 ```
 
 #### Use bedtools to quantify mean proportion of heterozygotes in sliding windows
 
 ```
 for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 1kb 10kb 100kb; do echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.cv1.$chrom.$window.txt; tail -n +2 het.cv1.$chrom.txt | bedtools map -a CroVir_genome_${window}_window.bed -b - -c 4,5,6,8 -o mean | grep -w $chrom >> het.cv1.$chrom.$window.txt; done; done
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 1kb 10kb 100kb; do echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.cv2.$chrom.$window.txt; tail -n +2 het.cv2.$chrom.txt | bedtools map -a CroVir_genome_${window}_window.bed -b - -c 4,5,6,8 -o mean | grep -w $chrom >> het.cv2.$chrom.$window.txt; done; done
 for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 1kb 10kb 100kb; do echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.co1.$chrom.$window.txt; tail -n +2 het.co1.$chrom.txt | bedtools map -a CroVir_genome_${window}_window.bed -b - -c 4,5,6,8 -o mean | grep -w $chrom >> het.co1.$chrom.$window.txt; done; done
-for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do for window in 1kb 10kb 100kb; do echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.co2.$chrom.$window.txt; tail -n +2 het.co2.$chrom.txt | bedtools map -a CroVir_genome_${window}_window.bed -b - -c 4,5,6,8 -o mean | grep -w $chrom >> het.co2.$chrom.$window.txt; done; done
 ```
 
 #### Mask CNVs
@@ -1611,13 +1600,53 @@ head -n 1 ../heterozygosity/het.co1.scaffold-mi2.10kb.txt > het.co1.scaffold-mi2
 head -n 1 ../heterozygosity/het.co1.scaffold-mi2.1kb.txt > het.co1.scaffold-mi2.1kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co1.scaffold-mi2.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> het.co1.scaffold-mi2.1kb.cnvMask.txt
 head -n 1 ../heterozygosity/het.co1.scaffold-mi7.10kb.txt > het.co1.scaffold-mi7.10kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co1.scaffold-mi7.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> het.co1.scaffold-mi7.10kb.cnvMask.txt
 head -n 1 ../heterozygosity/het.co1.scaffold-mi7.1kb.txt > het.co1.scaffold-mi7.1kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co1.scaffold-mi7.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> het.co1.scaffold-mi7.1kb.cnvMask.txt
+```
 
-head -n 1 ../heterozygosity/het.co2.scaffold-mi1.10kb.txt > het.co2.scaffold-mi1.10kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi1.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> het.co2.scaffold-mi1.10kb.cnvMask.txt
-head -n 1 ../heterozygosity/het.co2.scaffold-mi1.1kb.txt > het.co2.scaffold-mi1.1kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi1.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> het.co2.scaffold-mi1.1kb.cnvMask.txt
-head -n 1 ../heterozygosity/het.co2.scaffold-mi2.10kb.txt > het.co2.scaffold-mi2.10kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi2.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> het.co2.scaffold-mi2.10kb.cnvMask.txt
-head -n 1 ../heterozygosity/het.co2.scaffold-mi2.1kb.txt > het.co2.scaffold-mi2.1kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi2.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> het.co2.scaffold-mi2.1kb.cnvMask.txt
-head -n 1 ../heterozygosity/het.co2.scaffold-mi7.10kb.txt > het.co2.scaffold-mi7.10kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi7.10kb.txt ./mask_bed/cnv_filter.10kb.bed no >> het.co2.scaffold-mi7.10kb.cnvMask.txt
-head -n 1 ../heterozygosity/het.co2.scaffold-mi7.1kb.txt > het.co2.scaffold-mi7.1kb.cnvMask.txt; python cnvMaskSelection.py ../heterozygosity/het.co2.scaffold-mi7.1kb.txt ./mask_bed/cnv_filter.1kb.bed no >> het.co2.scaffold-mi7.1kb.cnvMask.txt
+#### Extract sites with ß scores > 95th quantile
+
+CV1 95th quantile = 3.345
+CO1 95th quantile = 3.841
+
+```
+awk '$4 > 3.344' ../beta/results/cv1.phased.scaffold-mi1.betascores.bed > beta.outliers.cv1.scaffold-mi1.bed
+awk '$4 > 3.344' ../beta/results/cv1.phased.scaffold-mi2.betascores.bed > beta.outliers.cv1.scaffold-mi2.bed
+awk '$4 > 3.344' ../beta/results/cv1.phased.scaffold-mi7.betascores.bed > beta.outliers.cv1.scaffold-mi7.bed
+awk '$4 > 3.84' ../beta/results/co1.phased.scaffold-mi1.betascores.bed > beta.outliers.co1.scaffold-mi1.bed
+awk '$4 > 3.84' ../beta/results/co1.phased.scaffold-mi2.betascores.bed > beta.outliers.co1.scaffold-mi2.bed
+awk '$4 > 3.84' ../beta/results/co1.phased.scaffold-mi7.betascores.bed > beta.outliers.co1.scaffold-mi7.bed
+```
+
+#### Determine overlap between formatted HWE data and ß outliers
+
+```
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.cv1.scaffold-mi1.beta.txt; tail -n +2 het.cv1.scaffold-mi1.txt | bedtools intersect -a - -b beta.outliers.cv1.scaffold-mi1.bed >> het.cv1.scaffold-mi1.beta.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.cv1.scaffold-mi2.beta.txt; tail -n +2 het.cv1.scaffold-mi2.txt | bedtools intersect -a - -b beta.outliers.cv1.scaffold-mi2.bed >> het.cv1.scaffold-mi2.beta.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.cv1.scaffold-mi7.beta.txt; tail -n +2 het.cv1.scaffold-mi7.txt | bedtools intersect -a - -b beta.outliers.cv1.scaffold-mi7.bed >> het.cv1.scaffold-mi7.beta.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.co1.scaffold-mi1.beta.txt; tail -n +2 het.co1.scaffold-mi1.txt | bedtools intersect -a - -b beta.outliers.co1.scaffold-mi1.bed >> het.co1.scaffold-mi1.beta.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.co1.scaffold-mi2.beta.txt; tail -n +2 het.co1.scaffold-mi2.txt | bedtools intersect -a - -b beta.outliers.co1.scaffold-mi2.bed >> het.co1.scaffold-mi2.beta.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.co1.scaffold-mi7.beta.txt; tail -n +2 het.co1.scaffold-mi7.txt | bedtools intersect -a - -b beta.outliers.co1.scaffold-mi7.bed >> het.co1.scaffold-mi7.beta.txt
+```
+
+#### Extract per site values within venom genes
+
+```
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.svmp.txt; tail -n +2 het.cv1.scaffold-mi1.beta.txt | bedtools intersect -a - -b gene.SVMP.bed >> het.beta.cv1.svmp.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.svmp.txt; tail -n +2 het.co1.scaffold-mi1.beta.txt | bedtools intersect -a - -b gene.SVMP.co.bed >> het.beta.co1.svmp.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.svsp.txt; tail -n +2 het.cv1.scaffold-mi2.beta.txt | bedtools intersect -a - -b gene.SVSP.bed >> het.beta.cv1.svsp.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.svsp.txt; tail -n +2 het.co1.scaffold-mi2.beta.txt | bedtools intersect -a - -b gene.SVSP.co.bed >> het.beta.co1.svsp.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.pla2.txt; tail -n +2 het.cv1.scaffold-mi7.beta.txt | bedtools intersect -a - -b gene.PLA2.bed >> het.beta.cv1.pla2.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.pla2.txt; tail -n +2 het.co1.scaffold-mi7.beta.txt | bedtools intersect -a - -b gene.PLA2.co.bed >> het.beta.co1.pla2.txt
+```
+
+#### Extract per site values within all genes
+
+```
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.scaffold-mi1.gene.txt; tail -n +2 het.cv1.scaffold-mi1.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi1.bed | bedtools intersect -v -a - -b gene.SVMP.bed >> het.beta.cv1.scaffold-mi1.gene.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.scaffold-mi1.gene.txt; tail -n +2 het.co1.scaffold-mi1.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi1.bed | bedtools intersect -v -a - -b gene.SVMP.co.bed >> het.beta.co1.scaffold-mi1.gene.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.scaffold-mi2.gene.txt; tail -n +2 het.cv1.scaffold-mi2.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi2.bed | bedtools intersect -v -a - -b gene.SVSP.bed >> het.beta.cv1.scaffold-mi2.gene.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.scaffold-mi2.gene.txt; tail -n +2 het.co1.scaffold-mi2.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi2.bed | bedtools intersect -v -a - -b gene.SVSP.co.bed >> het.beta.co1.scaffold-mi2.gene.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.cv1.scaffold-mi7.gene.txt; tail -n +2 het.cv1.scaffold-mi7.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi7.bed | bedtools intersect -v -a - -b gene.PLA2.bed >> het.beta.cv1.scaffold-mi7.gene.txt
+echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.scaffold-mi7.gene.txt; tail -n +2 het.co1.scaffold-mi7.beta.txt | bedtools intersect -a - -b gene.all.scaffold-mi7.bed | bedtools intersect -v -a - -b gene.PLA2.co.bed >> het.beta.co1.scaffold-mi7.gene.txt
 ```
 
 ### Selection appendix 7: Trans-species polymorphism
