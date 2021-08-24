@@ -1496,6 +1496,26 @@ for pop in cv1 co1; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.phased.all
 
 ### Selection appendix 4: Point estimates for all genes
 
+Calculate mean iHS and ß for all genes in the genome annotation.
+
+#### Set up environment
+
+```
+cd gene_means
+```
+
+These commands will use the gene coordinates in `resources/gene.all.bed`.
+
+#### Calculate mean iHS and ß per gene
+
+```
+echo -e "chrom\tstart\tend\tiHS" > gene.all.iHS_mean.cv1.txt; tail -n +2 ../rehh/cv.all_ihs.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene.all.bed -b - -c 4 -o mean >> gene.all.iHS_mean.cv1.txt
+echo -e "chrom\tstart\tend\tiHS" > gene.all.iHS_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.all_ihs.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene.all.bed -b - -c 4 -o mean >> gene.all.iHS_mean.co1.txt
+
+echo -e "chrom\tstart\tend\tbeta" > gene.all.beta_mean.cv1.txt; tail -n +2 ../beta/results/cv1.phased.all.betascores.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene.all.bed -b - -c 4 -o mean >> gene.all.beta_mean.cv1.txt
+echo -e "chrom\tstart\tend\tbeta" > gene.all.beta_mean.co1.txt; tail -n +2 ../cnv_masked_results/co1.phased.all.betascores.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene.all.bed -b - -c 4 -o mean >> gene.all.beta_mean.co1.txt
+```
+
 ### Selection appendix 5: Point estimates for 'other' venom genes
 
 ### Selection appendix 6: Proportion heterozygotes at high ß sites
