@@ -1726,7 +1726,39 @@ sh fastaMake.sh
 
 ## Appendix 1: Mapping statistics
 
+Produce information about the results of mapping filtered data to the reference genome.
+
+### Set up environment
+
+```
+mkdir mapping_statistics
+cd mapping_statistics
+```
+
+### Use samtools stat to quantify mapping data
+
+The script below will loop over bam files for samples in `resources/sample.list`.
+
+__*runSamtoolsStat.sh*__
+```
+list=$1
+for indv in `cat $list`; do
+	echo calculating mapping statistics for $indv
+	samtools stat -@ 8 ../bam/$indv.bam > $indv.bam.stat.txt
+done
+```
+
+Run the script.
+
+```
+sh runSamtoolsStat.sh sample.list
+```
+
 ## Appendix 2: Genotype quality
+
+Look at genotype quality at SNP sites to make sure there's not a major difference in SNP quality inside/outside of major venom gene regions.
+
+### 
 
 
 
