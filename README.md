@@ -1327,7 +1327,110 @@ cd gene_means
 
 These analyses will use the coordinates in `resources/gene_venom.bed`.
 
+#### Calculate mean π per venom gene
 
+```
+echo -e "chrom\tstart\tend\tpi_mean" > svmp.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svmp.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi1.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tpi_mean" > svsp.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > svsp.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi2.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.pi_mean.co2.txt
+
+echo -e "chrom\tstart\tend\tpi_mean" > pla2.pi_mean.cv1.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV1' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.pi_mean.cv1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2.pi_mean.cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt | grep 'CV2' | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.pi_mean.cv2.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2.pi_mean.co1.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co1.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.pi_mean.co1.txt
+echo -e "chrom\tstart\tend\tpi_mean" > pla2.pi_mean.co2.txt; tail -n +2 ../cnv_masked_results/pi.scaffold-mi7.1kb.co2.cnvMask.txt | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.pi_mean.co2.txt
+```
+
+#### Calculate mean dxy per venom gene
+
+```
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svmp.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > svsp.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.dxy_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2.dxy_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.dxy_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2.dxy_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_dxy.txt | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.dxy_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tdxy_mean" > pla2.dxy_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/dxy.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.dxy_mean.co1co2.txt
+```
+
+#### Calculate mean Fst per venom gene
+
+```
+echo -e "chrom\tstart\tend\tfst_mean" > svmp.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi1.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svmp.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi1.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.fst_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > svsp.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi2.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > svsp.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi2.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.fst_mean.co1co2.txt
+
+echo -e "chrom\tstart\tend\tfst_mean" > pla2.fst_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.cv1co1.cnvMask.txt | grep -v 'nan' | grep -P 'CV1\tCO1' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.fst_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2.fst_mean.cv1cv2.txt; tail -n +2 ../pixy/pixy_results/pixy.scaffold-mi7.1kb_fst.txt | grep -v 'nan' | grep -P 'CV1\tCV2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.fst_mean.cv1cv2.txt
+echo -e "chrom\tstart\tend\tfst_mean" > pla2.fst_mean.co1co2.txt; tail -n +2 ../cnv_masked_results/fst.scaffold-mi7.1kb.co1co2.cnvMask.txt | grep -v 'nan' | grep -P 'CO1\tCO2' | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.fst_mean.co1co2.txt
+```
+
+#### Calculate mean Tajima's D per venom gene
+
+```
+echo -e "chrom\tstart\tend\tTajimaD" > svmp.TajimaD_mean.cv1.txt; tail -n +2 ../tajima_d/cv.colorado.all.1kb.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.TajimaD_mean.cv1.txt
+echo -e "chrom\tstart\tend\tTajimaD" > svsp.TajimaD_mean.cv1.txt; tail -n +2 ../tajima_d/cv.colorado.all.1kb.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.TajimaD_mean.cv1.txt
+echo -e "chrom\tstart\tend\tTajimaD" > pla2.TajimaD_mean.cv1.txt; tail -n +2 ../tajima_d/cv.colorado.scaffold-mi7.250bp.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+250,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.TajimaD_mean.cv1.txt
+
+echo -e "chrom\tstart\tend\tTajimaD" > svmp.TajimaD_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.california.all.1kb.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.TajimaD_mean.co1.txt
+echo -e "chrom\tstart\tend\tTajimaD" > svsp.TajimaD_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.california.all.1kb.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.TajimaD_mean.co1.txt
+echo -e "chrom\tstart\tend\tTajimaD" > pla2.TajimaD_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.california.scaffold-mi7.250bp.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+250,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.TajimaD_mean.co1.txt
+
+echo -e "chrom\tstart\tend\tTajimaD" > svmp.TajimaD_mean.cv2.txt; tail -n +2 ../tajima_d/cv.montana.all.1kb.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.TajimaD_mean.cv2.txt
+echo -e "chrom\tstart\tend\tTajimaD" > svsp.TajimaD_mean.cv2.txt; tail -n +2 ../tajima_d/cv.montana.all.1kb.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.TajimaD_mean.cv2.txt
+echo -e "chrom\tstart\tend\tTajimaD" > pla2.TajimaD_mean.cv2.txt; tail -n +2 ../tajima_d/cv.montana.scaffold-mi7.250bp.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+250,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.TajimaD_mean.cv2.txt
+
+echo -e "chrom\tstart\tend\tTajimaD" > svmp.TajimaD_mean.co2.txt; tail -n +2 ../cnv_masked_results/co.idaho.all.1kb.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.TajimaD_mean.co2.txt
+echo -e "chrom\tstart\tend\tTajimaD" > svsp.TajimaD_mean.co2.txt; tail -n +2 ../cnv_masked_results/co.idaho.all.1kb.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+1000,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.TajimaD_mean.co2.txt
+echo -e "chrom\tstart\tend\tTajimaD" > pla2.TajimaD_mean.co2.txt; tail -n +2 ../cnv_masked_results/co.idaho.scaffold-mi7.250bp.cnvMask.Tajima.D | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+250,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.TajimaD_mean.co2.txt
+```
+
+#### Calculate mean df per venom gene
+
+```
+echo -e "chrom\tstart\tend\tdf_mean" > svmp.df_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/window.1kb.df_prop.all.cv1.co1.cnvMask.txt | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$6}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.df_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdf_mean" > svsp.df_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/window.1kb.df_prop.all.cv1.co1.cnvMask.txt | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$6}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.df_mean.cv1co1.txt
+echo -e "chrom\tstart\tend\tdf_mean" > pla2.df_mean.cv1co1.txt; tail -n +2 ../cnv_masked_results/window.250bp.df_prop.scaffold-mi7.cv1.co1.cnvMask.txt | grep -v 'nan' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$6}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.df_mean.cv1co1.txt
+```
+
+#### Calculate mean iHS per venom gene
+
+*Note: The slick little first awk command checks for and removes missing data lines. They're lame!*
+
+```
+echo -e "chrom\tstart\tend\tiHS" > svmp.iHS_mean.cv1.txt; tail -n +2 ../rehh/cv.all_ihs.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.iHS_mean.cv1.txt
+echo -e "chrom\tstart\tend\tiHS" > svsp.iHS_mean.cv1.txt; tail -n +2 ../rehh/cv.all_ihs.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.iHS_mean.cv1.txt
+echo -e "chrom\tstart\tend\tiHS" > pla2.iHS_mean.cv1.txt; tail -n +2 ../rehh/cv.mi7_ihs.250bp.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.iHS_mean.cv1.txt
+
+echo -e "chrom\tstart\tend\tiHS" > svmp.iHS_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.all_ihs.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.iHS_mean.co1.txt
+echo -e "chrom\tstart\tend\tiHS" > svsp.iHS_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.all_ihs.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.iHS_mean.co1.txt
+echo -e "chrom\tstart\tend\tiHS" > pla2.iHS_mean.co1.txt; tail -n +2 ../cnv_masked_results/co.mi7_ihs.250bp.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.iHS_mean.co1.txt
+```
+
+#### Calculate mean ß per venom gene
+
+```
+echo -e "chrom\tstart\tend\tiHS" > svmp.beta_mean.cv1.txt; tail -n +2 ../beta/results/cv1.phased.all.betascores.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.beta_mean.cv1.txt
+echo -e "chrom\tstart\tend\tiHS" > svsp.beta_mean.cv1.txt; tail -n +2 ../beta/results/cv1.phased.all.betascores.1kb.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.beta_mean.cv1.txt
+echo -e "chrom\tstart\tend\tiHS" > pla2.beta_mean.cv1.txt; tail -n +2 ../beta/results/cv1.phased.scaffold-mi7.betascores.250bp.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.beta_mean.cv1.txt
+
+echo -e "chrom\tstart\tend\tiHS" > svmp.beta_mean.co1.txt; tail -n +2 ../cnv_masked_results/co1.phased.all.betascores.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVMP.bed -b - -c 4 -o mean >> svmp.beta_mean.co1.txt
+echo -e "chrom\tstart\tend\tiHS" > svsp.beta_mean.co1.txt; tail -n +2 ../cnv_masked_results/co1.phased.all.betascores.1kb.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_SVSP.bed -b - -c 4 -o mean >> svsp.beta_mean.co1.txt
+echo -e "chrom\tstart\tend\tiHS" > pla2.beta_mean.co1.txt; tail -n +2 ../cnv_masked_results/co1.phased.scaffold-mi7.betascores.250bp.cnvMask.txt | awk '{ if ( $4 != "." ) { print $0; } }' | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4}' | bedtools sort -i - | bedtools map -a gene_PLA2.bed -b - -c 4 -o mean >> pla2.beta_mean.co1.txt
+```
 
 ### Selection appendix 3: Estimates for non-venom homologs
 
