@@ -1434,6 +1434,66 @@ echo -e "chrom\tstart\tend\tiHS" > pla2.beta_mean.co1.txt; tail -n +2 ../cnv_mas
 
 ### Selection appendix 3: Estimates for non-venom homologs
 
+Parse results files for variation in non-venom homologs, for comparison to venom gene results.
+
+These steps use the non-venom homolog BED coordinates in `resources/non-venom_paralogs_[SVMP,SVSP,PLA2].bed`
+
+#### Extract π, dxy, and Fst results for non-venom homologs
+
+```
+cd pixy
+mkdir non-venom
+
+for pop in CV1 CV2 CO1 CO2; do for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_pi" > ./non-venom/$pop.non-venom_${venom}.10kb_pi.txt; tail -n +2 ./pixy_results/pixy.all.10kb_pi.txt | grep $pop | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/$pop.non-venom_${venom}.10kb_pi.txt; done; done
+for pop in CV1 CV2 CO1 CO2; do for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_pi" > ./non-venom/$pop.non-venom_${venom}.1kb_pi.txt; cat ./pixy_results/pixy.*.1kb_pi.txt | grep $pop | awk 'BEGIN{OFS="\t"}{print $2,$3,$4,$5}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/$pop.non-venom_${venom}.1kb_pi.txt; done; done
+
+for pop in cv1co1 cv1cv2 co1co2; do for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_dxy" > ./non-venom/$pop.non-venom_${venom}.10kb_dxy.txt; tail -n +2 ./pixy_results/dxy.10kb.$pop.txt | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/$pop.non-venom_${venom}.10kb_dxy.txt; done; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_dxy" > ./non-venom/cv1co1.non-venom_${venom}.1kb_dxy.txt; cat ./pixy_results/pixy.*.1kb_dxy.txt | grep -P "CV1\tCO1" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/cv1co1.non-venom_${venom}.1kb_dxy.txt; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_dxy" > ./non-venom/cv1cv2.non-venom_${venom}.1kb_dxy.txt; cat ./pixy_results/pixy.*.1kb_dxy.txt | grep -P "CV1\tCV2" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/cv1cv2.non-venom_${venom}.1kb_dxy.txt; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_dxy" > ./non-venom/co1co2.non-venom_${venom}.1kb_dxy.txt; cat ./pixy_results/pixy.*.1kb_dxy.txt | grep -P "CO1\tCO2" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/co1co2.non-venom_${venom}.1kb_dxy.txt; done
+
+for pop in cv1co1 cv1cv2 co1co2; do for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_wc_fst" > ./non-venom/$pop.non-venom_${venom}.10kb_fst.txt; tail -n +2 ./pixy_results/fst.10kb.$pop.txt | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/$pop.non-venom_${venom}.10kb_fst.txt; done; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_wc_fst" > ./non-venom/cv1co1.non-venom_${venom}.1kb_fst.txt; cat ./pixy_results/pixy.*.1kb_fst.txt | grep -P "CV1\tCO1" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/cv1co1.non-venom_${venom}.1kb_fst.txt; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_wc_fst" > ./non-venom/cv1cv2.non-venom_${venom}.1kb_fst.txt; cat ./pixy_results/pixy.*.1kb_fst.txt | grep -P "CV1\tCV2" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/cv1cv2.non-venom_${venom}.1kb_fst.txt; done
+for venom in SVMP SVSP PLA2; do echo -e "chromosome\twindow_pos_1\twindow_pos_2\tavg_wc_fst" > ./non-venom/co1co2.non-venom_${venom}.1kb_fst.txt; cat ./pixy_results/pixy.*.1kb_fst.txt | grep -P "CO1\tCO2" | awk 'BEGIN{OFS="\t"}{print $3,$4,$5,$6}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> ./non-venom/co1co2.non-venom_${venom}.1kb_fst.txt; done
+```
+
+#### Extract Tajima's D results for non-venom homologs
+
+```
+cd tajima_d
+
+for pop in cv.colorado cv.montana co.california co.idaho; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.all.10kb.Tajima.D > $pop.non-venom_${venom}.10kb.Tajima.D; tail -n +2 $pop.all.10kb.Tajima.D | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+10000,$3,$4}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed | awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$5}' >> $pop.non-venom_${venom}.10kb.Tajima.D; done; done
+for pop in cv.colorado cv.montana co.california co.idaho; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.all.1kb.Tajima.D > $pop.non-venom_${venom}.1kb.Tajima.D; tail -n +2 $pop.all.1kb.Tajima.D | awk 'BEGIN{OFS="\t"}{print $1,$2,$2+10000,$3,$4}' | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed | awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$5}' >> $pop.non-venom_${venom}.1kb.Tajima.D; done; done
+```
+
+#### Extract df results for non-venom homologs
+
+```
+cd df/results_df
+
+for pop in cv1.co1 cv1.cv2 co1.co2; do for venom in SVMP SVSP PLA2; do head -n 1 window.10kb.df_prop.all.$pop.txt > window.10kb.df_prop.non-venom_${venom}.$pop.txt; tail -n +2 window.10kb.df_prop.all.$pop.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> window.10kb.df_prop.non-venom_${venom}.$pop.txt; done; done
+for pop in cv1.co1 cv1.cv2 co1.co2; do for venom in SVMP SVSP PLA2; do head -n 1 window.1kb.df_prop.all.$pop.txt > window.1kb.df_prop.non-venom_${venom}.$pop.txt; tail -n +2 window.1kb.df_prop.all.$pop.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> window.1kb.df_prop.non-venom_${venom}.$pop.txt; done; done
+```
+
+#### Extract iHS results for non-venom homologs
+
+```
+cd rehh
+
+for pop in cv co; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.all_ihs.10kb.txt > $pop.non-venom_${venom}_ihs.10kb.txt; tail -n +2 $pop.all_ihs.10kb.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> $pop.non-venom_${venom}_ihs.10kb.txt; done; done
+for pop in cv co; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.all_ihs.1kb.txt > $pop.non-venom_${venom}_ihs.1kb.txt; tail -n +2 $pop.all_ihs.1kb.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> $pop.non-venom_${venom}_ihs.1kb.txt; done; done
+```
+
+#### Extract ß results for non-venom homologs
+
+```
+cd beta/results
+
+for pop in cv1 co1; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.phased.all.betascores.10kb.txt > $pop.phased.non-venom_${venom}.betascores.10kb.txt; tail -n +2 $pop.phased.all.betascores.10kb.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> $pop.phased.non-venom_${venom}.betascores.10kb.txt; done; done
+for pop in cv1 co1; do for venom in SVMP SVSP PLA2; do head -n 1 $pop.phased.all.betascores.1kb.txt > $pop.phased.non-venom_${venom}.betascores.1kb.txt; tail -n +2 $pop.phased.all.betascores.1kb.txt | bedtools intersect -a - -b non-venom_paralogs_${venom}.bed >> $pop.phased.non-venom_${venom}.betascores.1kb.txt; done; done
+```
+
 ### Selection appendix 4: Point estimates for all genes
 
 ### Selection appendix 5: Point estimates for 'other' venom genes
