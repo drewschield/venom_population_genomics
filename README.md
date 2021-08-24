@@ -35,7 +35,7 @@ If you have any questions, you can email me at drew.schield[at]colorado.edu.
 	* [Selection appendix 6: Proportion heterozygotes at high ß sites](#selection-appendix-6-proportion-heterozygotes-at-high-ß-sites)
 	* [Selection appendix 7: Trans-species polymorphism](#selection-appendix-7-trans-species-polymorphism)
 * [Recombination rate variation and linkage disequilibrium analysis](#recombination-rate-variation-and-linkage-disequilibrium-analysis)
-* Analysis in R
+* [Analysis in R](#analysis-in-r)
 * [Appendix 1: Mapping statistics](#appendix-1-mapping-statistics)
 * [Appendix 2: Genotype quality](#appendix-2-genotype-quality)
 
@@ -1998,6 +1998,10 @@ cat oreganus.phased.pla2-flank.hap.ld | sed 1,1d | awk -F " " 'function abs(v) {
 ```
 
 ## Analysis in R
+
+A handful of R scripts to perform downstream statistical analyses and for basic plotting of results can be found in the `R` subdirectory.
+
+*Note: you are probably more skilled in R than I am. These scripts are generally ugly and here mainly for posterity.*
 
 ## Appendix 1: Mapping statistics
 
