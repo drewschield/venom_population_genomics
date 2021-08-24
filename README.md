@@ -1651,6 +1651,74 @@ echo -e "chrom\tstart\tend\thom1\thet\thom2\tprop_het" > het.beta.co1.scaffold-m
 
 ### Selection appendix 7: Trans-species polymorphism
 
+Produce phased alignments to query for trans-species polymorphisms and private polymorphisms. The alignments will be generated from the phased VCF data for CV1 and CO1 populations, and outgroup C. atrox data from the all-sites VCFs.
+
+#### Set up environment
+
+```
+mkdir alignments
+cd alignments
+mkdir input
+```
+
+#### Format input VCFs
+
+The phased VCF files need to be bgzipped and tabix indexed.
+
+```
+bgzip -c viridis.phased.scaffold-mi1.vcf > ./input/viridis.phased.scaffold-mi1.vcf.gz
+tabix -p vcf ./input/viridis.phased.scaffold-mi1.vcf.gz
+
+bgzip -c oreganus.phased.scaffold-mi1.vcf > ./input/oreganus.phased.scaffold-mi1.vcf.gz
+tabix -p vcf ./input/oreganus.phased.scaffold-mi1.vcf.gz
+
+bgzip -c viridis.phased.scaffold-mi2.vcf > ./input/viridis.phased.scaffold-mi2.vcf.gz
+tabix -p vcf ./input/viridis.phased.scaffold-mi2.vcf.gz
+
+bgzip -c oreganus.phased.scaffold-mi2.vcf > ./input/oreganus.phased.scaffold-mi2.vcf.gz
+tabix -p vcf ./input/oreganus.phased.scaffold-mi2.vcf.gz
+
+bgzip -c viridis.phased.scaffold-mi7.vcf > ./input/viridis.phased.scaffold-mi7.vcf.gz
+tabix -p vcf ./input/viridis.phased.scaffold-mi7.vcf.gz
+
+bgzip -c oreganus.phased.scaffold-mi7.vcf > ./input/oreganus.phased.scaffold-mi7.vcf.gz
+tabix -p vcf ./input/oreganus.phased.scaffold-mi7.vcf.gz
+```
+
+#### Format fasta files for venom-linked chromosomes with both haplotypes per sample
+
+This script will extract data from the VCF files and produce 'consensus' sequences per haplotype based on these data and the reference genome. It also requires sample lists for CV1 and CO1 in `resources`. The last line produces a 'sequential' fasta output without sequence text wrapping - comment this line out or delete the sequential output if you don't care about this.
+
+__*fastaMake.sh*__
+```
+for chrom in scaffold-mi1 scaffold-mi2 scaffold-mi7; do
+	touch venom.$chrom.fasta
+	samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz -s CA0346 -H 1 -M N -i 'type="snp" | alt="."' >> venom.$chrom.fasta
+	sed -i.bak "s/$chrom/atrox_CA0346_A/" venom.$chrom.fasta
+	samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.$chrom.vcf.gz -s CA0346 -H 2 -M N -i 'type="snp" | alt="."' >> venom.$chrom.fasta
+	sed -i.bak "s/$chrom/atrox_CA0346_B/" venom.$chrom.fasta
+	for indv in `cat pop.list.cv1`; do
+		samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ./input/viridis.phased.$chrom.vcf.gz -s $indv -H 1 >> venom.$chrom.fasta
+		sed -i.bak "s/$chrom/cv1_${indv}_A/" venom.$chrom.fasta
+		samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ./input/viridis.phased.$chrom.vcf.gz -s $indv -H 2 >> venom.$chrom.fasta
+		sed -i.bak "s/$chrom/cv1_${indv}_B/" venom.$chrom.fasta
+	done
+	for indv in `cat pop.list.co1`; do
+		samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ./input/oreganus.phased.$chrom.vcf.gz -s $indv -H 1 >> venom.$chrom.fasta
+		sed -i.bak "s/$chrom/co1_${indv}_A/" venom.$chrom.fasta
+		samtools faidx ../CroVir_genome_L77pg_16Aug2017.final_rename.fasta $chrom | bcftools consensus ./input/oreganus.phased.$chrom.vcf.gz -s $indv -H 2 >> venom.$chrom.fasta
+		sed -i.bak "s/$chrom/co1_${indv}_B/" venom.$chrom.fasta
+	done
+	sed -i.bak "s/*/N/g" venom.$chrom.fasta
+	awk '/^>/ {printf("\n%s\n",$0);next; } { printf("%s",$0);}  END {printf("\n");}' < venom.$chrom.fasta | tail -n +2 > venom.$chrom.sequential.fasta
+done
+```
+
+Run the script.
+
+```
+sh fastaMake.sh
+```
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
