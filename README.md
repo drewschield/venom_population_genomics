@@ -1722,6 +1722,133 @@ sh fastaMake.sh
 
 ## Recombination rate variation and linkage disequilibrium analysis
 
+### Set up environment
+
+```
+mkdir recombination
+cd recombination
+mkdir recombination_maps
+mkdir sliding_windows
+mkdir cnv_filter
+```
+
+### Calculate mean population-scaled recombination rate in sliding windows
+
+Recombination rates were estimated using LDhelmet in [Schield et al. (2020) MBE](https://academic.oup.com/mbe/advance-article-abstract/doi/10.1093/molbev/msaa003/5700722). The LD-based recombination maps are available [here](https://figshare.com/articles/dataset/Rattlesnake_Recombination_Maps/11283224). Place these in the `recombination_maps` subdirectory.
+
+The commands below use the relevant window files in BED format in `resources`.
+
+```
+cd sliding_windows
+
+head -n 1 viridis.recomb.bpen10.windowed.10kb.txt > viridis.recomb.bpen10.windowed.1kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/viridis.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_1kb_window.bed -b - >> viridis.recomb.bpen10.windowed.1kb.txt
+head -n 1 oreganus.recomb.bpen10.windowed.10kb.txt > oreganus.recomb.bpen10.windowed.1kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/oreganus.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_1kb_window.bed -b - >> oreganus.recomb.bpen10.windowed.1kb.txt
+
+head -n 1 viridis.recomb.bpen10.windowed.10kb.txt > viridis.recomb.bpen10.windowed.10kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/viridis.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_10kb_window.bed -b - >> viridis.recomb.bpen10.windowed.10kb.txt
+head -n 1 oreganus.recomb.bpen10.windowed.10kb.txt > oreganus.recomb.bpen10.windowed.10kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/oreganus.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_10kb_window.bed -b - >> oreganus.recomb.bpen10.windowed.10kb.txt
+
+head -n 1 viridis.recomb.bpen10.windowed.100kb.txt > viridis.recomb.bpen10.windowed.100kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/viridis.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_100kb_window.bed -b - >> viridis.recomb.bpen10.windowed.100kb.txt
+head -n 1 oreganus.recomb.bpen10.windowed.100kb.txt > oreganus.recomb.bpen10.windowed.100kb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/oreganus.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_100kb_window.bed -b - >> oreganus.recomb.bpen10.windowed.100kb.txt
+
+head -n 1 viridis.recomb.bpen10.windowed.1Mb.txt > viridis.recomb.bpen10.windowed.1Mb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/viridis.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_1Mb_window.bed -b - >> viridis.recomb.bpen10.windowed.1Mb.txt
+head -n 1 oreganus.recomb.bpen10.windowed.1Mb.txt > oreganus.recomb.bpen10.windowed.1Mb.txt; awk 'BEGIN {OFS="\t"} FNR > 1 {print $1, $2, $3, $4, $5, $6, $7}' ../recombination_maps/oreganus.recomb.bpen10.txt | bedtools map -c 4,5,6,7 -o mean,mean,mean,mean -a CroVir_genome_1Mb_window.bed -b - >> oreganus.recomb.bpen10.windowed.1Mb.txt
+
+cd ..
+```
+
+### Mask centromeres
+
+#### Set up environment
+
+```
+cd sliding_windows
+```
+
+#### Write NA's in regions overlapping approximate centromere locations
+
+Use the script `centromereMask.py` in the `python` subdirectory to output NA's in centromere regions.
+
+```
+for rho in *.recomb.*.txt; do pop=`echo $rho | cut -d. -f1`; window=`echo $rho | cut -d. -f5`; python centromereMask.py $rho > $pop.recomb.bpen10.windowed.$window.centromereMask.txt; done
+```
+
+### CNV-masking
+
+#### Use bedtools intersect to extract coordinates of map intervals in CNVs
+
+```
+tail -n +2 recombination_maps/oreganus.recomb.bpen10.txt | bedtools intersect -u -a - -b cnv.CV-CO.venom_regions.bed > cnv_filter/oreganus.recomb.bpen10.cnv_filter.txt
+```
+
+#### Mask map intervals in CNVs
+
+Run script `cnvMaskRecombination.py` in the `python` subdirectory to mask recombination map input.
+
+```
+python cnvMaskRecombination.py ./cnv_filter/oreganus.recomb.bpen10.cnv_filter.txt oreganus.recomb.bpen10.txt > oreganus.recomb.bpen10.cnv_mask.txt
+```
+
+#### Format BED recombination map for C. oreganus
+
+```
+tail -n +2 oreganus.recomb.bpen10.cnv_mask.txt | awk 'BEGIN{OFS="\t"}{print $1, $2-1, $3, $4}' > ./recombination_maps/oreganus.recomb.bpen10.cnv_mask.bed
+bedtools sort -i ./recombination_maps/oreganus.recomb.bpen10.cnv_mask.bed > ./recombination_maps/oreganus.recomb.bpen10.cnv_mask.sort.bed
+```
+
+#### Extract CNV regions to mask in sliding windows
+
+```
+cd sliding_windows
+tail -n +2 oreganus.recomb.bpen10.windowed.10kb.centromereMask.txt | bedtools intersect -u -a - -b cnv.CV-CO.venom_regions.bed > oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnv_filter.txt
+tail -n +2 oreganus.recomb.bpen10.windowed.1kb.centromereMask.txt | bedtools intersect -u -a - -b cnv.CV-CO.venom_regions.bed > oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnv_filter.txt
+```
+
+#### Mask CNV windows
+
+```
+python cnvMask.py oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.10kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.txt
+python cnvMask.py oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnv_filter.txt oreganus.recomb.bpen10.windowed.1kb.centromereMask.txt > oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnvMask.txt
+```
+
+### Calculate diversity-independent recombination rates
+
+Because the population-scaled recombination rates are not independent of effective population size, π can be used as a proxy to divide the estimates by to account for effective population size.
+
+#### Set up environment
+
+```
+cd recombination
+mkdir correction_pi
+```
+
+#### Write intermediate recombination rate + π sliding window files
+
+```
+paste ./sliding_windows/viridis.recomb.bpen10.windowed.100kb.centromereMask.txt ../pixy/pixy_results/pi.100kb.cv1.txt | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/viridis.recomb.bpen10.windowed.100kb.centromereMask+pi.txt
+paste ./sliding_windows/viridis.recomb.bpen10.windowed.10kb.centromereMask.txt ../pixy/pixy_results/pi.10kb.cv1.txt | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/viridis.recomb.bpen10.windowed.10kb.centromereMask+pi.txt
+
+paste ./sliding_windows/oreganus.recomb.bpen10.windowed.100kb.centromereMask.txt ../pixy/pixy_results/pi.100kb.co1.txt | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/oreganus.recomb.bpen10.windowed.100kb.centromereMask+pi.txt
+paste ./sliding_windows/oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.txt ../pixy/pixy_results/pi.10kb.co1.txt | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask+pi.txt
+
+echo -e "chrom\tstart\tend\tmean\tp0.500\tp0.025\tp0.975\tpi" > ./correction_pi/viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask+pi.txt; paste <(grep 'scaffold-mi7' ./sliding_windows/viridis.recomb.bpen10.windowed.1kb.centromereMask.txt) <(grep 'CV1' ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt) | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask+pi.txt
+echo -e "chrom\tstart\tend\tmean\tp0.500\tp0.025\tp0.975\tpi" > ./correction_pi/oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask+pi.txt; paste <(grep 'scaffold-mi7' ./sliding_windows/oreganus.recomb.bpen10.windowed.1kb.centromereMask.cnvMask.txt) <(grep 'CO1' ../pixy/pixy_results/pixy.scaffold-mi7.1kb_pi.txt) | awk 'BEGIN{OFS="\t"}{print $1,$2,$3,$4,$5,$6,$7,$12}' >> ./correction_pi/oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask+pi.txt
+```
+
+#### Calculate pi-corrected recombination rates
+
+Use the script `correctionPi.py` in `python`.
+
+```
+python correctionPi.py ./correction_pi/viridis.recomb.bpen10.windowed.100kb.centromereMask+pi.txt > viridis.recomb.bpen10.windowed.100kb.centromereMask.piCorrected.txt 
+python correctionPi.py ./correction_pi/viridis.recomb.bpen10.windowed.10kb.centromereMask+pi.txt > viridis.recomb.bpen10.windowed.10kb.centromereMask.piCorrected.txt 
+
+python correctionPi.py ./correction_pi/oreganus.recomb.bpen10.windowed.100kb.centromereMask+pi.txt > oreganus.recomb.bpen10.windowed.100kb.centromereMask.piCorrected.txt 
+python correctionPi.py ./correction_pi/oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask+pi.txt > oreganus.recomb.bpen10.windowed.10kb.centromereMask.cnvMask.piCorrected.txt 
+
+python correctionPi.py ./correction_pi/viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask+pi.txt > viridis.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.piCorrected.txt 
+python correctionPi.py ./correction_pi/oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask+pi.txt > oreganus.recomb.bpen10.scaffold-mi7.windowed.1kb.centromereMask.cnvMask.piCorrected.txt 
+```
+
 ## Analysis in R
 
 ## Appendix 1: Mapping statistics
@@ -1758,7 +1885,20 @@ sh runSamtoolsStat.sh sample.list
 
 Look at genotype quality at SNP sites to make sure there's not a major difference in SNP quality inside/outside of major venom gene regions.
 
-### 
+### Set up environment
+
+```
+mkdir genotype_quality
+cd genotype_quality
+```
+
+### Extract quality per site statistics
+
+```
+vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi1.vcf.gz --site-quality --out cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi1
+vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi2.vcf.gz --site-quality --out cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi2
+vcftools --gzvcf ../vcf/vcf_chrom-specific_cvco+outgroup/cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7.vcf.gz --site-quality --out cvco+outgroup.mask.HardFilter.depth.chrom.scaffold-mi7
+```
 
 
 
