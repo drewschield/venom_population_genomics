@@ -2060,7 +2060,19 @@ A handful of R scripts to perform downstream statistical analyses and for basic 
 * `LD_decay.R` - examine the decay of linkage disequilibrium in venom gene regions compared to flanking regions
 * `otherVG_vs_genome.R` - compare population genetic estimators in 'other' venom genes to the genome background
 * `proportion_heterozygotes.R` - examine the proportion of heterozygotes in venom region SNPs compared to backgrounds and test whether ß outliers have high heterozygosity
-* 
+* `recombination_rate_venom.R` - quantify recombination rates (π-corrected) in venom gene regions
+* `rehhCalculations.R` - perform haplotype diversity analysis on CV1 and CO1 phased data
+* `scans_beta.R` - plot genome scans of the ß statistic
+* `scans_df.R` - plot genome scans of fixed differences
+* `scans_otherVGs.R` - plot genome scans of selection statistics over 'other' venom gene regions
+* `scans_pixy.R` - plot genome scans of π, dxy, and Fst
+* `scans_recombination.R` - plot genome scans recombination rates
+* `scans_rehh.R` - plot genome scans of iHS
+* `scans_Tajimas_D.R` - plot genome scans of Tajima's D statistic
+* `selection_recombination_comparison.R` - compare distributions of recombination rate, iHS, and ß
+* `selection_statistic_summaries.R` - calculate summary statistics for Tajima's D, df, iHS, and ß distributions
+* `stats_pixy.R` - calculate summary statistics for π, dxy, and Fst distributions
+* `trans-speces_polymorphism.R` - compare frequency of trans-species polymorphisms in major venom regions to backgrounds
 
 ## Appendix 1: Mapping statistics
 
