@@ -2052,6 +2052,16 @@ A handful of R scripts to perform downstream statistical analyses and for basic 
 
 *Note: you are probably more skilled in R than I am. These scripts are generally ugly and here mainly for posterity.*
 
+* `admixture_plotting.R` - commands to format and plot ADMIXTURE results
+* `beta_parameter_comp.R` - compare results of BetaScan runs with different parameter settings
+* `gene_vs_intergenic_stats.R` - compare genetic diversity and differentiation statistics in genic and intergenic regions of the major venom gene clusters
+* `genome-wide_div.R` - run statistical analyses of genome-wide genetic diversity and differentiation statistics
+* `genome-wide_ihs_beta.R` - run statistical analyses of genome-wide selection statistics
+* `LD_decay.R` - examine the decay of linkage disequilibrium in venom gene regions compared to flanking regions
+* `otherVG_vs_genome.R` - compare population genetic estimators in 'other' venom genes to the genome background
+* `proportion_heterozygotes.R` - examine the proportion of heterozygotes in venom region SNPs compared to backgrounds and test whether ß outliers have high heterozygosity
+* 
+
 ## Appendix 1: Mapping statistics
 
 Produce information about the results of mapping filtered data to the reference genome.
